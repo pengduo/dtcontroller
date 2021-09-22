@@ -9,6 +9,32 @@ rules:
 - apiGroups:
   - apps.dtwave.com
   resources:
+  - dtnodes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - dtnodes/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - dtnodes/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - apps.dtwave.com
+  resources:
   - iots
   verbs:
   - create

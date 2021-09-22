@@ -28,8 +28,13 @@ type DtNodeSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of DtNode. Edit dtnode_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	Ip       string            `json:"ip,omitempty"`
+	Mac      string            `json:"mac,omitempty"`
+	User     string            `json:"user,omitempty"`
+	Password string            `json:"password,omitempty"`
+	TTL      string            `json:"ttl,omitempty"`
+	HostName string            `json:"hostname,omitempty"`
+	Labels   map[string]string `json:"labels,omitempty"`
 }
 
 // DtNodeStatus defines the observed state of DtNode
@@ -38,6 +43,10 @@ type DtNodeStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 }
 
+//+kubebuilder:printcolumn:name="Mac",type=string,JSONPath=`.mac.phase`
+//+kubebuilder:printcolumn:name="HostName",type=string,JSONPath=`.spec.hostname`
+//+kubebuilder:printcolumn:name="Ip",type=string,JSONPath=`.spec.ip`
+//+kubebuilder:printcolumn:name="Labels",type=string,JSONPath=`.spec.labels`
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
