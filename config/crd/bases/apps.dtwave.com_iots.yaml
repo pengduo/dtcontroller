@@ -1,0 +1,86 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
+  name: iots.apps.dtwave.com
+spec:
+  group: apps.dtwave.com
+  names:
+    kind: Iot
+    listKind: IotList
+    plural: iots
+    singular: iot
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.ip
+      name: Ip
+      type: string
+    - jsonPath: .spec.mac
+      name: Mac
+      type: string
+    - jsonPath: .spec.type
+      name: Type
+      type: string
+    - jsonPath: .spec.dns
+      name: Dns
+      type: string
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: Iot is the Schema for the iots API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: IotSpec defines the desired state of Iot
+            properties:
+              dns:
+                type: string
+              ip:
+                type: string
+              mac:
+                type: string
+              type:
+                type: string
+            type: object
+          status:
+            description: IotStatus defines the observed state of Iot
+            properties:
+              notready:
+                type: string
+              offlinema:
+                type: string
+              online:
+                type: string
+              ready:
+                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                  of cluster Important: Run "make" to regenerate code after modifying
+                  this file'
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

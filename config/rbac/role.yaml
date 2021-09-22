@@ -1,0 +1,86 @@
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - iots
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - iots/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - iots/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - machines
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - machines/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - machines/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - proxies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - proxies/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - proxies/status
+  verbs:
+  - get
+  - patch
+  - update
