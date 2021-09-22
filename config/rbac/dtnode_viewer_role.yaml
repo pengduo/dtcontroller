@@ -1,0 +1,20 @@
+# permissions for end users to view dtnodes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dtnode-viewer-role
+rules:
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - dtnodes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - dtnodes/status
+  verbs:
+  - get

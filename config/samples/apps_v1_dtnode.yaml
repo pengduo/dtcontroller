@@ -1,0 +1,7 @@
+apiVersion: apps.dtwave.com/v1
+kind: DtNode
+metadata:
+  name: dtnode-sample
+spec:
+  # Add fields here
+  foo: bar
