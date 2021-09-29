@@ -4,7 +4,6 @@ make: Entering directory `/Users/apple/code/dtcontroller'
  
 /Users/apple/code/dtcontroller/bin/controller-gen object:headerFile="hack/boilerplate.go.txt" paths="./..."
 go fmt ./...
- 
 go vet ./...
 go build -o bin/manager main.go
 make: Leaving directory `/Users/apple/code/dtcontroller'

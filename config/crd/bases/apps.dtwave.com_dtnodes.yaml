@@ -17,6 +17,9 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
+    - jsonPath: .uid.phase
+      name: Uid
+      type: string
     - jsonPath: .mac.phase
       name: Mac
       type: string
@@ -61,7 +64,15 @@ spec:
                 type: string
               password:
                 type: string
+              providerid:
+                description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+                  Important: Run "make" to regenerate code after modifying this file'
+                type: string
               ttl:
+                type: string
+              type:
+                type: string
+              uid:
                 type: string
               user:
                 type: string
