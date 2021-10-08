@@ -6,9 +6,8 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # PARTICULAR PURPOSE.
 
 # This program built for i386-apple-darwin11.3.0
- 
 
-# Make data base, printed on Fri Oct  8 16:32:04 2021
+# Make data base, printed on Fri Oct  8 16:39:51 2021
 
 # Variables
 
@@ -33,7 +32,7 @@ CURDIR := /Users/apple/code/dtcontroller
 # makefile (from `Makefile', line 17)
 SHELL = /usr/bin/env bash -o pipefail
 # environment
-VSCODE_NLS_CONFIG = {"locale":"zh-cn","availableLanguages":{"*":"zh-cn"},"_languagePackId":"98b06e5fc1e607fc0dd054b0c5455cc9.zh-cn","_translationsConfigFile":"/Users/apple/Library/Application Support/Code/clp/98b06e5fc1e607fc0dd054b0c5455cc9.zh-cn/tcf.json","_cacheRoot":"/Users/apple/Library/Application Support/Code/clp/98b06e5fc1e607fc0dd054b0c5455cc9.zh-cn","_resolvedLanguagePackCoreLocation":"/Users/apple/Library/Application Support/Code/clp/98b06e5fc1e607fc0dd054b0c5455cc9.zh-cn/ee8c7def80afc00dd6e593ef12f37756d8f504ea","_corruptedFile":"/Users/apple/Library/Application Support/Code/clp/98b06e5fc1e607fc0dd054b0c5455cc9.zh-cn/corrupted.info","_languagePackSupport":true}
+VSCODE_NLS_CONFIG = {"locale":"zh-cn","availableLanguages":{"*":"zh-cn"},"_languagePackId":"222b4d3b1dfbc8b78c314dbaa3707709.zh-cn","_translationsConfigFile":"/Users/apple/Library/Application Support/Code/clp/222b4d3b1dfbc8b78c314dbaa3707709.zh-cn/tcf.json","_cacheRoot":"/Users/apple/Library/Application Support/Code/clp/222b4d3b1dfbc8b78c314dbaa3707709.zh-cn","_resolvedLanguagePackCoreLocation":"/Users/apple/Library/Application Support/Code/clp/222b4d3b1dfbc8b78c314dbaa3707709.zh-cn/ee8c7def80afc00dd6e593ef12f37756d8f504ea","_corruptedFile":"/Users/apple/Library/Application Support/Code/clp/222b4d3b1dfbc8b78c314dbaa3707709.zh-cn/corrupted.info","_languagePackSupport":true}
 # environment
 _ = /usr/bin/make
 # makefile (from `Makefile', line 1)
@@ -43,7 +42,7 @@ VSCODE_VERBOSE_LOGGING = true
 # makefile (from `Makefile', line 52)
 ENVTEST_ASSETS_DIR = $(shell pwd)/testbin
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /var/folders/2d/sw533xss01xgmsypmyn_s0c00000gn/T/vscode-ipc-80286d63-5ca0-4ce5-b1fd-b9b0b8e44998.sock
+VSCODE_IPC_HOOK_EXTHOST = /var/folders/2d/sw533xss01xgmsypmyn_s0c00000gn/T/vscode-ipc-81842fc4-176d-403b-9e97-0f1c46ba2f20.sock
 # environment
 VSCODE_CWD = /Users/apple/code/dtcontroller
 # environment
@@ -70,8 +69,6 @@ SSH_AUTH_SOCK = /private/tmp/com.apple.launchd.PjkOrFkZLn/Listeners
 GOBIN = $(shell go env GOPATH)/bin
 # environment
 VSCODE_PIPE_LOGGING = true
-# environment
-commit1 = 30ff908c77b253573b108e3ebb2463691009427c
 # environment
 PWD = /Users/apple/code/dtcontroller
 # environment
@@ -115,9 +112,7 @@ USER = apple
 # makefile
 .DEFAULT_GOAL := all
 # environment
-TERM_SESSION_ID = A48F806D-B611-4ACD-B68E-8301CB63ADA8
-# environment
-commit2 = 4f896162199a40b50d4afd7ac9998e7b4bdfd8cc
+TERM_SESSION_ID = 903A4E67-4574-46FB-986F-6B8CAA6A7AD9
 # environment
 LESS = -R
 # automatic
@@ -177,9 +172,9 @@ LANG = C
 # environment
 TERM = xterm-256color
 # environment
-VSCODE_PID = 51788
+VSCODE_PID = 52948
 # variable set hash-table stats:
-# Load=83/1024=8%, Rehash=0, Collisions=2/123=2%
+# Load=81/1024=8%, Rehash=0, Collisions=2/121=2%
 
 # Pattern-specific Variable Values
 
@@ -187,9 +182,9 @@ VSCODE_PID = 51788
 
 # Directories
 
-# . (device 16777218, inode 17005870): 24 files, no impossibilities.
+# . (device 16777218, inode 17005870): 23 files, no impossibilities.
 
-# 24 files, no impossibilities in 1 directories.
+# 23 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -251,11 +246,11 @@ build: generate fmt vet
 #  Implicit rule search has not been done.
 #  File does not exist.
 #  File has been updated.
+ 
 #  Needs to be updated (-q is set).
 # variable set hash-table stats:
 # Load=0/32=0%, Rehash=0, Collisions=0/8=0%
 #  commands to execute (from `Makefile', line 61):
- 
 	go build -o bin/manager main.go
 	
 
@@ -398,6 +393,6 @@ install: manifests kustomize
 # strcache size: total = 4096 / max = 4096 / min = 4096 / avg = 4096
 # strcache free: total = 4087 / max = 4087 / min = 4087 / avg = 4087
 
-# Finished Make data base on Fri Oct  8 16:32:04 2021
+# Finished Make data base on Fri Oct  8 16:39:51 2021
 
  
