@@ -6,13 +6,15 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # PARTICULAR PURPOSE.
 
 # This program built for i386-apple-darwin11.3.0
+ 
 
-# Make data base, printed on Fri Oct  8 16:39:51 2021
+# Make data base, printed on Sat Oct  9 09:38:03 2021
 
 # Variables
 
 # automatic
 <D = $(patsubst %/,%,$(dir $<))
+ 
 # automatic
 ?F = $(notdir $?)
 # environment
@@ -42,7 +44,7 @@ VSCODE_VERBOSE_LOGGING = true
 # makefile (from `Makefile', line 52)
 ENVTEST_ASSETS_DIR = $(shell pwd)/testbin
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /var/folders/2d/sw533xss01xgmsypmyn_s0c00000gn/T/vscode-ipc-81842fc4-176d-403b-9e97-0f1c46ba2f20.sock
+VSCODE_IPC_HOOK_EXTHOST = /var/folders/2d/sw533xss01xgmsypmyn_s0c00000gn/T/vscode-ipc-3691a664-fe4f-4579-869a-bc385b0a5888.sock
 # environment
 VSCODE_CWD = /Users/apple/code/dtcontroller
 # environment
@@ -112,7 +114,7 @@ USER = apple
 # makefile
 .DEFAULT_GOAL := all
 # environment
-TERM_SESSION_ID = 903A4E67-4574-46FB-986F-6B8CAA6A7AD9
+TERM_SESSION_ID = EA50EECB-2669-48B9-A1CF-2EE05C14682B
 # environment
 LESS = -R
 # automatic
@@ -157,6 +159,7 @@ MAKEFILES :=
 <F = $(notdir $<)
 # environment
 PAGER = less
+ 
 # environment
 LC_ALL = C
 # automatic
@@ -172,7 +175,7 @@ LANG = C
 # environment
 TERM = xterm-256color
 # environment
-VSCODE_PID = 52948
+VSCODE_PID = 79873
 # variable set hash-table stats:
 # Load=81/1024=8%, Rehash=0, Collisions=2/121=2%
 
@@ -182,9 +185,9 @@ VSCODE_PID = 52948
 
 # Directories
 
-# . (device 16777218, inode 17005870): 23 files, no impossibilities.
+# . (device 16777218, inode 17005870): 24 files, no impossibilities.
 
-# 23 files, no impossibilities in 1 directories.
+# 24 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -246,7 +249,6 @@ build: generate fmt vet
 #  Implicit rule search has not been done.
 #  File does not exist.
 #  File has been updated.
- 
 #  Needs to be updated (-q is set).
 # variable set hash-table stats:
 # Load=0/32=0%, Rehash=0, Collisions=0/8=0%
@@ -393,6 +395,6 @@ install: manifests kustomize
 # strcache size: total = 4096 / max = 4096 / min = 4096 / avg = 4096
 # strcache free: total = 4087 / max = 4087 / min = 4087 / avg = 4087
 
-# Finished Make data base on Fri Oct  8 16:39:51 2021
+# Finished Make data base on Sat Oct  9 09:38:03 2021
 
  

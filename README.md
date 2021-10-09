@@ -17,3 +17,16 @@ dtcontroller是一系列控制器的整合
 新增一种资源：`kubebuilder create api --group apps --version v1 --kind DtNode`
 
 生成crd文件：`make manifests`
+
+## DtNode文档
+[NtNode](docs/Dtnode.md)
+
+## Machine文档
+[Machine](docs/Machine.md)
+
+## Proxy文档
+[Proxy](docs/Proxy.md)
+
+## Iot文档
+[Iot](Iot.md)
+

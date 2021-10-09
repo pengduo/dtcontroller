@@ -2,7 +2,7 @@
 
 ## 资源解释
 
-DtNode是一种全局性的资源，其不属于任一名称空间。DtNode代表节点资源，例如物理机资源、虚拟机资源以及ECS资源，kubernetes集群中只存储，DtNode的元数据信息，包含：Ip, Mac, Type, User, Password, Cpu, Memory, Hostname, Disk等信息。
+DtNode是一种全局性的资源，其不属于任一名称空间。DtNode代表节点资源，例如物理机资源、虚拟机资源以及ECS资源，kubernetes集群中只存储，DtNode的元数据信息，包含：`Ip, Mac, Type, User, Password, Cpu, Memory, Hostname, Disk`等信息。
 
 ## 资源操作
 
