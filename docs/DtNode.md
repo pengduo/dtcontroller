@@ -4,6 +4,20 @@
 
 DtNode是一种全局性的资源，其不属于任一名称空间。DtNode代表节点资源，例如物理机资源、虚拟机资源以及ECS资源，kubernetes集群中只存储，DtNode的元数据信息，包含：`Ip, Mac, Type, User, Password, Cpu, Memory, Hostname, Disk`等信息。
 
+## 字段详解
+
+* Type: 主动填写，type标示DtNode的类型，可选值为：vmware和pyhsical和ecs，分别是虚拟机和物理机和ecs资源,
+* Ip: 主动填写，ip标示DtNode的ssh访问ip，需要满足CIDR格式
+* User: 主动填写，ssh登录用户
+* Password: 主动填写，ssh登录密码
+* Mac: 程序回填，mac为机器的网卡信息，可以不提供，由程序后续回填
+* Cpu: 程序回填，机器的CPU信息
+* Memory: 程序回填，机器的内存信息
+* Hostname: 程序回填，机器主机名
+* Disk: 程序回填，机器磁盘信息
+* TTL: 程序回填，机器的延时情况
+* Labels: 主动填写，标签
+
 ## 资源操作
 
 针对DtNode资源而言，k8s具备以下作用：
@@ -21,8 +35,10 @@ kind: DtNode
 metadata:
   name: dtnode-sample
 spec:
-  # Add fields here
-  foo: bar
+  type: vmware
+  ip: 192.168.90.111
+  user: root
+  password: 123456
 ```
 
 ### 修改资源

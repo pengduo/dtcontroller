@@ -17,14 +17,11 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .uid.phase
-      name: Uid
+    - jsonPath: .type.phase
+      name: Type
       type: string
-    - jsonPath: .mac.phase
-      name: Mac
-      type: string
-    - jsonPath: .spec.hostname
-      name: HostName
+    - jsonPath: .ttl.phase
+      name: TTL
       type: string
     - jsonPath: .spec.ip
       name: Ip
@@ -52,6 +49,10 @@ spec:
           spec:
             description: DtNodeSpec defines the desired state of DtNode
             properties:
+              cpu:
+                type: string
+              disl:
+                type: string
               hostname:
                 type: string
               ip:
@@ -62,17 +63,15 @@ spec:
                 type: object
               mac:
                 type: string
-              password:
+              memory:
                 type: string
-              providerid:
-                description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-                  Important: Run "make" to regenerate code after modifying this file'
+              password:
                 type: string
               ttl:
                 type: string
               type:
-                type: string
-              uid:
+                description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+                  Important: Run "make" to regenerate code after modifying this file'
                 type: string
               user:
                 type: string

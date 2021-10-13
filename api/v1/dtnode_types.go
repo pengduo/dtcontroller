@@ -27,16 +27,17 @@ import (
 type DtNodeSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	ProviderID string            `json:"providerid,omitempty"`
-	Uid        string            `json:"uid,omitempty"`
-	Type       string            `json:"type,omitempty"`
-	Ip         string            `json:"ip,omitempty"`
-	Mac        string            `json:"mac,omitempty"`
-	User       string            `json:"user,omitempty"`
-	Password   string            `json:"password,omitempty"`
-	TTL        string            `json:"ttl,omitempty"`
-	HostName   string            `json:"hostname,omitempty"`
-	Labels     map[string]string `json:"labels,omitempty"`
+	Type     string            `json:"type,omitempty"`
+	Ip       string            `json:"ip,omitempty"`
+	User     string            `json:"user,omitempty"`
+	Password string            `json:"password,omitempty"`
+	Mac      string            `json:"mac,omitempty"`
+	Cpu      string            `json:"cpu,omitempty"`
+	Memory   string            `json:"memory,omitempty"`
+	Hostname string            `json:"hostname,omitempty"`
+	Disk     string            `json:"disl,omitempty"`
+	TTL      string            `json:"ttl,omitempty"`
+	Labels   map[string]string `json:"labels,omitempty"`
 }
 
 // DtNodeStatus defines the observed state of DtNode
@@ -45,9 +46,8 @@ type DtNodeStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 }
 
-//+kubebuilder:printcolumn:name="Uid",type=string,JSONPath=`.uid.phase`
-//+kubebuilder:printcolumn:name="Mac",type=string,JSONPath=`.mac.phase`
-//+kubebuilder:printcolumn:name="HostName",type=string,JSONPath=`.spec.hostname`
+//+kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.type.phase`
+//+kubebuilder:printcolumn:name="TTL",type=string,JSONPath=`.ttl.phase`
 //+kubebuilder:printcolumn:name="Ip",type=string,JSONPath=`.spec.ip`
 //+kubebuilder:printcolumn:name="Labels",type=string,JSONPath=`.spec.labels`
 //+kubebuilder:object:root=true
