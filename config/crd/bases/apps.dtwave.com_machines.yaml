@@ -35,8 +35,8 @@ spec:
     - jsonPath: .spec.cpu
       name: Cpu
       type: string
-    - jsonPath: .spec.nodename
-      name: NodeName
+    - jsonPath: .spec.dtnode
+      name: DtNode
       type: string
     - jsonPath: .spec.labels
       name: Labels
@@ -61,11 +61,13 @@ spec:
           spec:
             description: MachineSpec defines the desired state of Machine
             properties:
-              cmdresult:
-                type: string
               command:
                 type: string
               cpu:
+                type: string
+              disk:
+                type: string
+              dtnode:
                 type: string
               hostname:
                 type: string
@@ -77,7 +79,7 @@ spec:
                 type: object
               mac:
                 type: string
-              nodename:
+              memory:
                 type: string
               password:
                 type: string

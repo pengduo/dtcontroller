@@ -117,13 +117,13 @@ func assignMachine(instance appsv1.Machine) *appsv1.Machine {
 	instance.Spec.HostName = "localhost-" + instance.Name
 	instance.Spec.User = "deploy"
 	hostname, _ := os.Hostname()
-	instance.Spec.NodeName = hostname
+	instance.Spec.DtNode = hostname
 	instance.Spec.Cpu = "1c"
 	instance.Spec.Ip = "192.168.23.23"
 	instance.Spec.Mac = "6a:00:03:3d:c1:90"
-	instance.Spec.Password = "123456" + instance.Spec.CmdResult
+	// instance.Spec.Password = "123456" + instance.Spec.CmdResult
 	log.Log.Info(cmdResult)
-	instance.Spec.CmdResult = cmdResult
+	// instance.Spec.CmdResult = cmdResult
 	log.Log.Info("分配机器完成")
 	log.Log.Info(instance.Name)
 	return &instance

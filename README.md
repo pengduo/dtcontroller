@@ -28,5 +28,5 @@ dtcontroller是一系列控制器的整合
 [Proxy](docs/Proxy.md)
 
 ## Iot文档
-[Iot](Iot.md)
+[Iot](docs/Iot.md)
 
