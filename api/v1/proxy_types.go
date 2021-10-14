@@ -26,8 +26,8 @@ type ProxyStatus struct {
 	Offline  string `json:"offlinema,omitempty"`
 }
 
-// +kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.spec.Type`
-// +kubebuilder:printcolumn:name="ProxyName",type=string,JSONPath=`.spec.proxyname`
+//+kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.spec.Type`
+//+kubebuilder:printcolumn:name="ProxyName",type=string,JSONPath=`.spec.proxyname`
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
