@@ -3,5 +3,7 @@ kind: DtNode
 metadata:
   name: dtnode-sample
 spec:
-  # Add fields here
-  foo: bar
+  type: vmware
+  ip: "192.168.90.111"
+  user: root
+  password: "123456"
