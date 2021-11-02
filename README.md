@@ -24,6 +24,9 @@ dtcontroller是一系列控制器的整合
 ## Machine文档
 [Machine](docs/Machine.md)
 
+## MachineGroup文档
+[MachineGroup](docs/MachineGroup.md)
+
 ## Proxy文档
 [Proxy](docs/Proxy.md)
 
