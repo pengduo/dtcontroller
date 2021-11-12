@@ -61,6 +61,32 @@ rules:
 - apiGroups:
   - apps.dtwave.com
   resources:
+  - machinegroups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - machinegroups/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - machinegroups/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - apps.dtwave.com
+  resources:
   - machines
   verbs:
   - create

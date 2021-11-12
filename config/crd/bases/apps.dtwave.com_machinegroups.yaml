@@ -6,27 +6,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: dtnodes.apps.dtwave.com
+  name: machinegroups.apps.dtwave.com
 spec:
   group: apps.dtwave.com
   names:
-    kind: DtNode
-    listKind: DtNodeList
-    plural: dtnodes
-    singular: dtnode
+    kind: MachineGroup
+    listKind: MachineGroupList
+    plural: machinegroups
+    singular: machinegroup
   scope: Namespaced
   versions:
-  - additionalPrinterColumns:
-    - jsonPath: .type.phase
-      name: Type
-      type: string
-    - jsonPath: .spec.labels
-      name: Labels
-      type: string
-    name: v1
+  - name: v1
     schema:
       openAPIV3Schema:
-        description: DtNode is the Schema for the dtnodes API
+        description: MachineGroup is the Schema for the machinegroups API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -41,27 +34,15 @@ spec:
           metadata:
             type: object
           spec:
-            description: DtNodeSpec defines the desired state of DtNode
+            description: MachineGroupSpec defines the desired state of MachineGroup
             properties:
-              ip:
-                type: string
-              labels:
-                additionalProperties:
-                  type: string
-                type: object
-              password:
-                type: string
-              ttl:
-                type: string
-              type:
-                description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-                  Important: Run "make" to regenerate code after modifying this file'
-                type: string
-              user:
+              foo:
+                description: Foo is an example field of MachineGroup. Edit machinegroup_types.go
+                  to remove/update
                 type: string
             type: object
           status:
-            description: DtNodeStatus defines the observed state of DtNode
+            description: MachineGroupStatus defines the observed state of MachineGroup
             type: object
         type: object
     served: true

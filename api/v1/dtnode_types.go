@@ -31,11 +31,6 @@ type DtNodeSpec struct {
 	Ip       string            `json:"ip,omitempty"`
 	User     string            `json:"user,omitempty"`
 	Password string            `json:"password,omitempty"`
-	Mac      string            `json:"mac,omitempty"`
-	Cpu      string            `json:"cpu,omitempty"`
-	Memory   string            `json:"memory,omitempty"`
-	Hostname string            `json:"hostname,omitempty"`
-	Disk     string            `json:"disl,omitempty"`
 	TTL      string            `json:"ttl,omitempty"`
 	Labels   map[string]string `json:"labels,omitempty"`
 }
@@ -47,8 +42,6 @@ type DtNodeStatus struct {
 }
 
 //+kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.type.phase`
-//+kubebuilder:printcolumn:name="TTL",type=string,JSONPath=`.ttl.phase`
-//+kubebuilder:printcolumn:name="Ip",type=string,JSONPath=`.spec.ip`
 //+kubebuilder:printcolumn:name="Labels",type=string,JSONPath=`.spec.labels`
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
