@@ -8,7 +8,7 @@ import (
 	"github.com/vmware/govmomi"
 )
 
-func client(ctx context.Context, vURL string, username string, password string) (client *govmomi.Client, err error) {
+func Vmclient(ctx context.Context, vURL string, username string, password string) (client *govmomi.Client, err error) {
 	u, err := url.Parse(vURL)
 	if err != nil {
 		log.Panicln(err.Error())

@@ -18,6 +18,10 @@ package controllers
 
 import (
 	"context"
+	"fmt"
+	"strings"
+
+	vmsdk "dtcontroller/vmsdk"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -52,8 +56,19 @@ type DtNodeReconciler struct {
 func (dtnodeReconciler *DtNodeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	// your logic here
 	dtnode := &appsv1.DtNode{}
+
+	ip := dtnode.Spec.Ip
+	username := dtnode.Spec.User
+	password := dtnode.Spec.Password
+	vURL := strings.Join([]string{"https://", username, ":", password, "@", ip, "/sdk"}, "")
+	fmt.Println("vURL", vURL)
+
+	_, err := vmsdk.Vmclient(ctx, vURL, username, password)
+	if err != nil {
+		panic(err)
+	}
+
 	dtnodeReconciler.Recorder.Event(dtnode, corev1.EventTypeNormal, "ready", "准备好了")
 
 	return ctrl.Result{}, nil
