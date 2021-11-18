@@ -19,16 +19,14 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"strings"
 
-	vmsdk "dtcontroller/vmsdk"
-
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/cri-api/pkg/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	appsv1 "dtcontroller/api/v1"
 )
@@ -58,18 +56,16 @@ func (dtnodeReconciler *DtNodeReconciler) Reconcile(ctx context.Context, req ctr
 
 	dtnode := &appsv1.DtNode{}
 
-	ip := dtnode.Spec.Ip
-	username := dtnode.Spec.User
-	password := dtnode.Spec.Password
-	vURL := strings.Join([]string{"https://", username, ":", password, "@", ip, "/sdk"}, "")
-	fmt.Println("vURL", vURL)
-
-	_, err := vmsdk.Vmclient(ctx, vURL, username, password)
+	err := dtnodeReconciler.Client.Get(context.TODO(), req.NamespacedName, dtnode)
 	if err != nil {
-		panic(err)
+		if errors.IsNotFound(err) {
+			return reconcile.Result{}, nil
+		}
+		return reconcile.Result{}, err
 	}
-
-	dtnodeReconciler.Recorder.Event(dtnode, corev1.EventTypeNormal, "ready", "准备好了")
+	fmt.Println("---------------")
+	fmt.Println(dtnode.Spec.Ip)
+	fmt.Println("---------------")
 
 	return ctrl.Result{}, nil
 }
