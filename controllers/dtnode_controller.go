@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
@@ -29,6 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	appsv1 "dtcontroller/api/v1"
+	"dtcontroller/vmsdk"
 )
 
 // DtNodeReconciler reconciles a DtNode object
@@ -63,9 +65,19 @@ func (dtnodeReconciler *DtNodeReconciler) Reconcile(ctx context.Context, req ctr
 		}
 		return reconcile.Result{}, err
 	}
-	fmt.Println("---------------")
-	fmt.Println(dtnode.Spec.Ip)
-	fmt.Println("---------------")
+	ip := dtnode.Spec.Ip
+	username := dtnode.Spec.User
+	password := dtnode.Spec.Password
+	vURL := strings.Join([]string{"https://", username, ":", password, "@", ip, "/sdk"}, "")
+
+	client, err := vmsdk.Vmclient(ctx, vURL, username, password)
+	if err != nil {
+		fmt.Println("error when building vm client")
+	}
+	vms := vmsdk.GetVms(ctx, client.Client, vmsdk.NewVmsHosts())
+	for _, vm := range vms {
+		fmt.Println(vm.Summary.Config.Name, "\t", vm.Summary.Guest.IpAddress, "\t")
+	}
 
 	return ctrl.Result{}, nil
 }

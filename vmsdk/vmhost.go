@@ -1,16 +1,12 @@
 package vmsdk
 
 import (
-	"encoding/csv"
 	"fmt"
 	"log"
-	"os"
-	"strconv"
 
 	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/object"
-	"github.com/vmware/govmomi/units"
 	"github.com/vmware/govmomi/vapi/library"
 	"github.com/vmware/govmomi/vapi/rest"
 	"github.com/vmware/govmomi/vapi/vcenter"
@@ -82,7 +78,7 @@ func vmDelete(ctx context.Context, vm *object.VirtualMachine) {
 }
 
 // 获取虚拟机
-func GetVms(ctx context.Context, client *vim25.Client, vmshosts *VmsHosts) {
+func GetVms(ctx context.Context, client *vim25.Client, vmshosts *VmsHosts) []mo.VirtualMachine {
 	m := view.NewManager(client)
 	v, err := m.CreateContainerView(ctx, client.ServiceContent.RootFolder, []string{"VirtualMachine"}, true)
 	if err != nil {
@@ -94,20 +90,24 @@ func GetVms(ctx context.Context, client *vim25.Client, vmshosts *VmsHosts) {
 	if err != nil {
 		panic(err)
 	}
+
 	// 输出虚拟机信息到csv
-	file, _ := os.OpenFile("./vms.csv", os.O_WRONLY|os.O_CREATE, os.ModePerm)
+	// file, _ := os.OpenFile("./vms.csv", os.O_WRONLY|os.O_CREATE, os.ModePerm)
 	//防止中文乱码
-	file.WriteString("\xEF\xBB\xBF")
-	w := csv.NewWriter(file)
-	w.Write([]string{"宿主机", "虚拟机", "系统", "状态", "IP地址", "资源"})
-	w.Flush()
-	for _, vm := range vms {
-		//虚拟机资源信息
-		res := strconv.Itoa(int(vm.Summary.Config.MemorySizeMB)) + " MB " + strconv.Itoa(int(vm.Summary.Config.NumCpu)) + " vCPU(s) " + units.ByteSize(vm.Summary.Storage.Committed+vm.Summary.Storage.Uncommitted).String()
-		w.Write([]string{vmshosts.SelectHost(vm.Summary.Runtime.Host.Value), vm.Summary.Config.Name, vm.Summary.Config.GuestFullName, string(vm.Summary.Runtime.PowerState), vm.Summary.Guest.IpAddress, res})
-		w.Flush()
-	}
-	file.Close()
+	// file.WriteString("\xEF\xBB\xBF")
+	// w := csv.NewWriter(file)
+	// w.Write([]string{"宿主机", "虚拟机", "系统", "状态", "IP地址", "资源"})
+	// w.Flush()
+	// for _, vm := range vms {
+	// 	//虚拟机资源信息
+	// 	res := strconv.Itoa(int(vm.Summary.Config.MemorySizeMB)) + " MB " + strconv.Itoa(int(vm.Summary.Config.NumCpu)) + " vCPU(s) " + units.ByteSize(vm.Summary.Storage.Committed+vm.Summary.Storage.Uncommitted).String()
+	// 	w.Write([]string{vmshosts.SelectHost(vm.Summary.Runtime.Host.Value), vm.Summary.Config.Name, vm.Summary.Config.GuestFullName, string(vm.Summary.Runtime.PowerState), vm.Summary.Guest.IpAddress, res})
+	// 	w.Flush()
+	// }
+	// file.Close()
+
+	return vms
+
 }
 
 // 读取主机信息
