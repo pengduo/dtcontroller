@@ -27,7 +27,7 @@ import (
 type DtNodeSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Type     string            `json:"type,omitempty"`
+	Provider string            `json:"provider,omitempty"`
 	Ip       string            `json:"ip,omitempty"`
 	User     string            `json:"user,omitempty"`
 	Password string            `json:"password,omitempty"`
@@ -42,8 +42,7 @@ type DtNodeStatus struct {
 	Phase string `json:"phase,omitempty"`
 }
 
-//+kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.spec.type`
-//+kubebuilder:printcolumn:name="Labels",type=string,JSONPath=`.spec.labels`
+//+kubebuilder:printcolumn:name="Provider",type=string,JSONPath=`.spec.provider`
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 

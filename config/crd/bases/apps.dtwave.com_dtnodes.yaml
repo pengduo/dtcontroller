@@ -17,11 +17,8 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .spec.type
-      name: Type
-      type: string
-    - jsonPath: .spec.labels
-      name: Labels
+    - jsonPath: .spec.provider
+      name: Provider
       type: string
     name: v1
     schema:
@@ -51,11 +48,11 @@ spec:
                 type: object
               password:
                 type: string
-              ttl:
-                type: string
-              type:
+              provider:
                 description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
                   Important: Run "make" to regenerate code after modifying this file'
+                type: string
+              ttl:
                 type: string
               user:
                 type: string
