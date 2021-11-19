@@ -39,9 +39,10 @@ type DtNodeSpec struct {
 type DtNodeStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	Phase string `json:"phase,omitempty"`
 }
 
-//+kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.type.phase`
+//+kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.spec.type`
 //+kubebuilder:printcolumn:name="Labels",type=string,JSONPath=`.spec.labels`
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status

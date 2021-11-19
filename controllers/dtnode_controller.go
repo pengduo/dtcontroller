@@ -70,13 +70,14 @@ func (dtnodeReconciler *DtNodeReconciler) Reconcile(ctx context.Context, req ctr
 	password := dtnode.Spec.Password
 	vURL := strings.Join([]string{"https://", username, ":", password, "@", ip, "/sdk"}, "")
 
-	client, err := vmsdk.Vmclient(ctx, vURL, username, password)
+	_, err = vmsdk.Vmclient(ctx, vURL, username, password)
 	if err != nil {
 		fmt.Println("error when building vm client")
 	}
-	vms := vmsdk.GetVms(ctx, client.Client, vmsdk.NewVmsHosts())
-	for _, vm := range vms {
-		fmt.Println(vm.Summary.Config.Name, "\t", vm.Summary.Guest.IpAddress, "\t")
+
+	err = dtnodeReconciler.Update(ctx, dtnode)
+	if err != nil {
+		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
