@@ -18,10 +18,7 @@ package controllers
 
 import (
 	"context"
-	"os"
-	"os/exec"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/cri-api/pkg/errors"
@@ -62,37 +59,16 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	// your logic here
 	instance := &appsv1.Machine{}
-	r.Recorder.Event(instance, corev1.EventTypeNormal, "test", "test")
 	err := r.Client.Get(context.TODO(), req.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
-		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
 
-	err = r.Update(ctx, instance)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
+	assignMachine(*instance)
 
-	switch instance.Status.Phase {
-	case "":
-		instance.Status.Phase = "PENDING"
-		instance = assignMachine(*instance)
-	case "FAILED":
-		log.Log.Info("分配失败")
-	case "PENDING":
-		instance.Status.Phase = "RUNNING"
-	case "RUNNING":
-		instance.Status.Phase = "COMPLATED"
-	}
-
-	err = r.Update(ctx, instance)
-	if err != nil {
-		instance.Status.Phase = "FAILED"
-	}
 	return ctrl.Result{}, nil
 }
 
@@ -106,25 +82,6 @@ func (r *MachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
 //分配Machine资源处理方法
 func assignMachine(instance appsv1.Machine) *appsv1.Machine {
 	log.Log.Info("开始执行分配机器操作")
-	var cmdResult string
-	cmd := exec.Command("bash", "-c", instance.Spec.Command)
-	if output, err := cmd.CombinedOutput(); err != nil {
-		cmdResult = err.Error()
-	} else {
-		cmdResult = string(output)
-	}
-	//模拟真实操作
-	instance.Spec.HostName = "localhost-" + instance.Name
-	instance.Spec.User = "deploy"
-	hostname, _ := os.Hostname()
-	instance.Spec.DtNode = hostname
-	instance.Spec.Cpu = "1c"
-	instance.Spec.Ip = "192.168.23.23"
-	instance.Spec.Mac = "6a:00:03:3d:c1:90"
-	// instance.Spec.Password = "123456" + instance.Spec.CmdResult
-	log.Log.Info(cmdResult)
-	// instance.Spec.CmdResult = cmdResult
-	log.Log.Info("分配机器完成")
-	log.Log.Info(instance.Name)
+
 	return &instance
 }
