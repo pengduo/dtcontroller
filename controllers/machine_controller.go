@@ -30,10 +30,6 @@ import (
 	appsv1 "dtcontroller/api/v1"
 )
 
-var (
-	output []byte
-)
-
 // MachineReconciler reconciles a Machine object
 type MachineReconciler struct {
 	client.Client
