@@ -101,6 +101,15 @@ func assignMachine(instance appsv1.Machine, dtnode appsv1.DtNode) *appsv1.Machin
 		err = vmsdk.DeployFromBare(context.Background(), vmClient.Client, instance.Name, "Datacenter", "Resources", "[datastore1]")
 		if err != nil {
 			fmt.Println("部署失败")
+		} else {
+			fmt.Println("分配机器成功")
+		}
+	case "clone":
+		err = vmsdk.CloneVm("test01", instance.Name, ctx, vmClient.Client, "Datacenter")
+		if err != nil {
+			fmt.Println("部署失败")
+		} else {
+			fmt.Println("分配机器成功")
 		}
 	}
 
