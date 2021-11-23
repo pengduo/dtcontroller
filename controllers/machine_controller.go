@@ -65,8 +65,7 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	dtnode := appsv1.DtNode{}
-	err = r.Client.Get(ctx, client.ObjectKey{Namespace: "default", Name: instance.Spec.DtNode}, &dtnode)
-	fmt.Println(dtnode.Name, "\t", dtnode.Namespace)
+	err = r.Client.Get(ctx, client.ObjectKey{Name: instance.Spec.DtNode}, &dtnode)
 	if err == nil {
 		assignMachine(*instance)
 	} else {

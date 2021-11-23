@@ -14,7 +14,7 @@ spec:
     listKind: DtNodeList
     plural: dtnodes
     singular: dtnode
-  scope: Namespaced
+  scope: Cluster
   versions:
   - additionalPrinterColumns:
     - jsonPath: .spec.provider

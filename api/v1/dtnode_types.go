@@ -45,6 +45,7 @@ type DtNodeStatus struct {
 //+kubebuilder:printcolumn:name="Provider",type=string,JSONPath=`.spec.provider`
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:resource:scope=Cluster
 
 // DtNode is the Schema for the dtnodes API
 type DtNode struct {
