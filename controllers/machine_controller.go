@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
@@ -63,7 +64,14 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return reconcile.Result{}, err
 	}
 
-	assignMachine(*instance)
+	dtnode := appsv1.DtNode{}
+	err = r.Client.Get(ctx, client.ObjectKey{Namespace: "default", Name: instance.Spec.DtNode}, &dtnode)
+	fmt.Println(dtnode.Name, "\t", dtnode.Namespace)
+	if err == nil {
+		assignMachine(*instance)
+	} else {
+		fmt.Println(err.Error())
+	}
 
 	return ctrl.Result{}, nil
 }
@@ -77,7 +85,7 @@ func (r *MachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 //分配Machine资源处理方法
 func assignMachine(instance appsv1.Machine) *appsv1.Machine {
-	log.Log.Info("开始执行分配机器操作")
-
+	fmt.Println("开始分配机器实例")
+	fmt.Println(instance.Spec.HostName, instance.Spec.DtNode)
 	return &instance
 }
