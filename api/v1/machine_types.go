@@ -12,17 +12,17 @@ type MachineSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	DtNode   string            `json:"dtnode,omitempty"`
-	HostName string            `json:"hostname,omitempty"`
-	Ip       string            `json:"ip,omitempty"`
-	Mac      string            `json:"mac,omitempty"`
-	User     string            `json:"user,omitempty"`
-	Password string            `json:"password,omitempty"`
-	Cpu      string            `json:"cpu,omitempty"`
-	Memory   string            `json:"memory,omitempty"`
-	Disk     string            `json:"disk,omitempty"`
-	Command  string            `json:"command,omitempty"`
-	Labels   map[string]string `json:"labels,omitempty"`
+	DtNode   string `json:"dtnode,omitempty"`
+	Type     string `json:"type,omitempty"`
+	HostName string `json:"hostname,omitempty"`
+	Ip       string `json:"ip,omitempty"`
+	Mac      string `json:"mac,omitempty"`
+	User     string `json:"user,omitempty"`
+	Password string `json:"password,omitempty"`
+	Cpu      string `json:"cpu,omitempty"`
+	Memory   string `json:"memory,omitempty"`
+	Disk     string `json:"disk,omitempty"`
+	Command  string `json:"command,omitempty"`
 }
 
 // MachineStatus defines the observed state of Machine
@@ -39,7 +39,7 @@ type MachineStatus struct {
 // +kubebuilder:printcolumn:name="User",type=string,JSONPath=`.spec.user`
 // +kubebuilder:printcolumn:name="Cpu",type=string,JSONPath=`.spec.cpu`
 // +kubebuilder:printcolumn:name="DtNode",type=string,JSONPath=`.spec.dtnode`
-// +kubebuilder:printcolumn:name="Labels",type=string,JSONPath=`.spec.labels`
+// +kubebuilder:printcolumn:name="type",type=string,JSONPath=`.spec.type`
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 

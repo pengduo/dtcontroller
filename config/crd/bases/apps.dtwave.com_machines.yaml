@@ -38,8 +38,8 @@ spec:
     - jsonPath: .spec.dtnode
       name: DtNode
       type: string
-    - jsonPath: .spec.labels
-      name: Labels
+    - jsonPath: .spec.type
+      name: type
       type: string
     name: v1
     schema:
@@ -73,15 +73,13 @@ spec:
                 type: string
               ip:
                 type: string
-              labels:
-                additionalProperties:
-                  type: string
-                type: object
               mac:
                 type: string
               memory:
                 type: string
               password:
+                type: string
+              type:
                 type: string
               user:
                 type: string

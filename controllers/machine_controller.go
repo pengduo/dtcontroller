@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
@@ -29,6 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	appsv1 "dtcontroller/api/v1"
+	"dtcontroller/vmsdk"
 )
 
 // MachineReconciler reconciles a Machine object
@@ -67,7 +69,7 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	dtnode := appsv1.DtNode{}
 	err = r.Client.Get(ctx, client.ObjectKey{Name: instance.Spec.DtNode}, &dtnode)
 	if err == nil {
-		assignMachine(*instance)
+		assignMachine(*instance, *&dtnode)
 	} else {
 		fmt.Println(err.Error())
 	}
@@ -83,8 +85,24 @@ func (r *MachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 //分配Machine资源处理方法
-func assignMachine(instance appsv1.Machine) *appsv1.Machine {
+func assignMachine(instance appsv1.Machine, dtnode appsv1.DtNode) *appsv1.Machine {
 	fmt.Println("开始分配机器实例")
-	fmt.Println(instance.Spec.HostName, instance.Spec.DtNode)
+	ctx := context.Background()
+	//"https://linjb@vsphere.local:LIN115jinbao!@192.168.123.138/sdk"
+	vURL := strings.Join([]string{"https://", dtnode.Spec.User, ":",
+		dtnode.Spec.Password, "@", dtnode.Spec.Ip, "/sdk"}, "")
+
+	vmClient, err := vmsdk.Vmclient(ctx, vURL, dtnode.Spec.User, dtnode.Spec.Password)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	switch instance.Spec.Type {
+	case "bare":
+		err = vmsdk.DeployFromBare(context.Background(), vmClient.Client, instance.Name, "Datacenter", "Resources", "[datastore1]")
+		if err != nil {
+			fmt.Println("部署失败")
+		}
+	}
+
 	return &instance
 }
