@@ -66,7 +66,7 @@ func VmShutdown(ctx context.Context, vm *object.VirtualMachine) {
 }
 
 //删除
-func vmDelete(ctx context.Context, vm *object.VirtualMachine) {
+func VmDelete(ctx context.Context, vm *object.VirtualMachine) {
 	// task 可以处理，也可以不处理
 	task, err := vm.Destroy(ctx)
 	if err != nil {
@@ -91,21 +91,6 @@ func GetVms(ctx context.Context, client *vim25.Client, vmshosts *VmsHosts) []mo.
 		panic(err)
 	}
 
-	// 输出虚拟机信息到csv
-	// file, _ := os.OpenFile("./vms.csv", os.O_WRONLY|os.O_CREATE, os.ModePerm)
-	//防止中文乱码
-	// file.WriteString("\xEF\xBB\xBF")
-	// w := csv.NewWriter(file)
-	// w.Write([]string{"宿主机", "虚拟机", "系统", "状态", "IP地址", "资源"})
-	// w.Flush()
-	// for _, vm := range vms {
-	// 	//虚拟机资源信息
-	// 	res := strconv.Itoa(int(vm.Summary.Config.MemorySizeMB)) + " MB " + strconv.Itoa(int(vm.Summary.Config.NumCpu)) + " vCPU(s) " + units.ByteSize(vm.Summary.Storage.Committed+vm.Summary.Storage.Uncommitted).String()
-	// 	w.Write([]string{vmshosts.SelectHost(vm.Summary.Runtime.Host.Value), vm.Summary.Config.Name, vm.Summary.Config.GuestFullName, string(vm.Summary.Runtime.PowerState), vm.Summary.Guest.IpAddress, res})
-	// 	w.Flush()
-	// }
-	// file.Close()
-
 	return vms
 
 }
@@ -126,6 +111,23 @@ func GetHosts(ctx context.Context, client *vim25.Client, vmshosts *VmsHosts) {
 	for _, hs := range hss {
 		vmshosts.AddHost(hs.Summary.Host.Value, hs.Summary.Config.Name)
 	}
+}
+
+//Get single host imformation
+func GetHost(ctx context.Context, client *vim25.Client, vmhost *VmsHost) {
+	m := view.NewManager(client)
+	v, err := m.CreateContainerView(ctx, client.ServiceContent.RootFolder, []string{"HostSystem"}, true)
+	if err != nil {
+		panic(err)
+	}
+	defer v.Destroy(ctx)
+	var hs mo.HostSystem
+	err = v.Retrieve(ctx, []string{"HostSystem"}, []string{"summary"}, &hs)
+	if err != nil {
+		panic(err)
+	}
+	vmhost.Ip = hs.Summary.Config.Name
+	vmhost.Name = hs.Summary.Host.Value
 }
 
 // 使用OVF模版部署
@@ -161,27 +163,25 @@ func DeployFromOVF(ctx context.Context, c *govmomi.Client, rc *rest.Client, item
 	return vm != nil
 }
 
-// 全新创建虚拟机
-func DeployFromBare(ctx context.Context, c *vim25.Client, name string, datacenter string, resourcepool string, datastore string) error {
+// Deploy A  new Machine from baremental
+func DeployFromBare(ctx context.Context, c *vim25.Client, name string, datacenter string,
+	resourcepool string, datastore string) (VmsHost, error) {
+	vmhost := VmsHost{}
 
 	finder := find.NewFinder(c)
 	dc, err := finder.Datacenter(ctx, datacenter)
 	if err != nil {
-		return err
+		return vmhost, err
 	}
-
 	finder.SetDatacenter(dc)
-
 	folders, err := dc.Folders(ctx)
 	if err != nil {
-		return err
+		return vmhost, err
 	}
-
 	pool, err := finder.ResourcePool(ctx, resourcepool)
 	if err != nil {
-		return err
+		return vmhost, err
 	}
-
 	spec := types.VirtualMachineConfigSpec{
 		Name:    name,
 		GuestId: string(types.VirtualMachineGuestOsIdentifierCentos7_64Guest),
@@ -192,25 +192,21 @@ func DeployFromBare(ctx context.Context, c *vim25.Client, name string, datacente
 		MemoryMB:          256,
 		NpivOnNonRdmDisks: types.NewBool(true),
 	}
-
 	task, err := folders.VmFolder.CreateVM(ctx, spec, pool, nil)
 	if err != nil {
-		return err
+		return vmhost, err
 	}
-
 	info, err := task.WaitForResult(ctx)
 	if err != nil {
-		return err
+		return vmhost, err
 	}
-
 	vm := object.NewVirtualMachine(c, info.Result.(types.ManagedObjectReference))
 	_, err = vm.ObjectName(ctx)
 	if err != nil {
-		return err
+		return vmhost, err
 	}
-
-	return nil
-
+	GetHost(ctx, c, &vmhost)
+	return vmhost, nil
 }
 
 // 克隆虚拟机
