@@ -53,7 +53,8 @@ type DtNodeReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
-func (dtnodeReconciler *DtNodeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (dtnodeReconciler *DtNodeReconciler) Reconcile(ctx context.Context,
+	req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
 	dtnode := &appsv1.DtNode{}
@@ -70,11 +71,17 @@ func (dtnodeReconciler *DtNodeReconciler) Reconcile(ctx context.Context, req ctr
 	password := dtnode.Spec.Password
 	vURL := strings.Join([]string{"https://", username, ":", password, "@", ip, "/sdk"}, "")
 
-	_, err = vmsdk.Vmclient(ctx, vURL, username, password)
+	vmclient, err := vmsdk.Vmclient(ctx, vURL, username, password)
 	if err != nil {
 		fmt.Println("error when building vm client")
 	}
+	version := vmclient.Version
 
+	dtnode.Status.Version = version
+
+	fmt.Println("-----------------")
+	fmt.Println(dtnode.Status.Version)
+	fmt.Println("-----------------")
 	err = dtnodeReconciler.Update(ctx, dtnode)
 	if err != nil {
 		return ctrl.Result{}, err

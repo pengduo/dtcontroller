@@ -20,6 +20,30 @@ spec:
     - jsonPath: .spec.provider
       name: Provider
       type: string
+    - jsonPath: .status.age
+      name: Phase
+      type: string
+    - jsonPath: .status.version
+      name: Version
+      type: string
+    - jsonPath: .status.cpu
+      name: Cpu
+      type: string
+    - jsonPath: .status.memory
+      name: Memory
+      type: string
+    - jsonPath: .status.storage
+      name: Storage
+      type: string
+    - jsonPath: .status.vms
+      name: Vms
+      type: integer
+    - jsonPath: .status.hosts
+      name: Hosts
+      type: integer
+    - jsonPath: .status.networks
+      name: Networks
+      type: integer
     name: v1
     schema:
       openAPIV3Schema:
@@ -42,17 +66,11 @@ spec:
             properties:
               ip:
                 type: string
-              labels:
-                additionalProperties:
-                  type: string
-                type: object
               password:
                 type: string
               provider:
                 description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
                   Important: Run "make" to regenerate code after modifying this file'
-                type: string
-              ttl:
                 type: string
               user:
                 type: string
@@ -60,11 +78,29 @@ spec:
           status:
             description: DtNodeStatus defines the observed state of DtNode
             properties:
+              age:
+                type: string
+              cpu:
+                type: string
+              hosts:
+                type: integer
+              memory:
+                type: string
+              networks:
+                type: integer
               phase:
                 description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
                   of cluster Important: Run "make" to regenerate code after modifying
                   this file'
                 type: string
+              storage:
+                type: string
+              ttl:
+                type: string
+              version:
+                type: string
+              vms:
+                type: integer
             type: object
         type: object
     served: true
