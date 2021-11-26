@@ -82,7 +82,7 @@ func (dtnodeReconciler *DtNodeReconciler) Reconcile(ctx context.Context,
 	fmt.Println("-----------------")
 	fmt.Println(dtnode.Status.Version)
 	fmt.Println("-----------------")
-	err = dtnodeReconciler.Update(ctx, dtnode)
+	err = dtnodeReconciler.Status().Update(ctx, dtnode)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
