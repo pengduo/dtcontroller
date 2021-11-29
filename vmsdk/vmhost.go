@@ -1,8 +1,9 @@
 package vmsdk
 
 import (
-	"fmt"
 	"log"
+	"strconv"
+	"strings"
 
 	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/find"
@@ -17,9 +18,18 @@ import (
 	"golang.org/x/net/context"
 )
 
+//分为主机操作和虚拟机操作
+//vmhost和vm
+
+// 主机结构体
 type VmsHost struct {
-	Name string
-	Ip   string
+	Name      string
+	Ip        string
+	Cpu       string
+	Memory    string
+	Disk      string
+	State     string
+	Processor string
 }
 type VmsHosts struct {
 	VmsHosts []VmsHost
@@ -32,8 +42,17 @@ func NewVmsHosts() *VmsHosts {
 	}
 }
 
-func (vmshosts *VmsHosts) AddHost(name string, ip string) {
-	host := &VmsHost{name, ip}
+func (vmshosts *VmsHosts) AddHost(name string, ip string, cpu string,
+	memory string, disk string, state string, processor string) {
+	host := &VmsHost{
+		Name:      name,
+		Ip:        ip,
+		Cpu:       cpu,
+		Memory:    memory,
+		Disk:      disk,
+		State:     state,
+		Processor: processor,
+	}
 	vmshosts.VmsHosts = append(vmshosts.VmsHosts, *host)
 }
 
@@ -90,13 +109,11 @@ func GetVms(ctx context.Context, client *vim25.Client, vmshosts *VmsHosts) []mo.
 	if err != nil {
 		panic(err)
 	}
-
 	return vms
-
 }
 
 // 读取主机信息
-func GetHosts(ctx context.Context, client *vim25.Client, vmshosts *VmsHosts) {
+func GetVmHosts(ctx context.Context, client *vim25.Client, vmshosts *VmsHosts) {
 	m := view.NewManager(client)
 	v, err := m.CreateContainerView(ctx, client.ServiceContent.RootFolder, []string{"HostSystem"}, true)
 	if err != nil {
@@ -109,28 +126,18 @@ func GetHosts(ctx context.Context, client *vim25.Client, vmshosts *VmsHosts) {
 		panic(err)
 	}
 	for _, hs := range hss {
-		vmshosts.AddHost(hs.Summary.Host.Value, hs.Summary.Config.Name)
+		s := hs.Summary
+		h := s.Hardware
+		z := s.QuickStats
+		ncpu := int32(h.NumCpuCores)
+		cpu := strings.Join([]string{strconv.Itoa(int(z.OverallCpuUsage)), "/", strconv.Itoa(int(ncpu * h.CpuMhz))}, "")
+		memory := strings.Join([]string{strconv.Itoa(int(z.OverallMemoryUsage)), "/", strconv.Itoa(int(h.MemorySize >> 20))}, "")
+		// todo
+		vmshosts.AddHost(hs.Name, "", cpu, memory, "", string(s.Runtime.ConnectionState), h.CpuModel)
 	}
 }
 
-//Get single host imformation
-func GetHost(ctx context.Context, client *vim25.Client, vmhost *VmsHost) {
-	m := view.NewManager(client)
-	v, err := m.CreateContainerView(ctx, client.ServiceContent.RootFolder, []string{"HostSystem"}, true)
-	if err != nil {
-		panic(err)
-	}
-	defer v.Destroy(ctx)
-	var hs mo.HostSystem
-	err = v.Retrieve(ctx, []string{"HostSystem"}, []string{"summary"}, &hs)
-	if err != nil {
-		panic(err)
-	}
-	vmhost.Ip = hs.Summary.Config.Name
-	vmhost.Name = hs.Summary.Host.Value
-}
-
-// 使用OVF模版部署
+// 使用OVF模版部署虚拟机
 func DeployFromOVF(ctx context.Context, c *govmomi.Client, rc *rest.Client, item library.Item, name string, datastoreID string, networkKey string, networkValue string, resourcePoolID string, folderID string) bool {
 	deploy := vcenter.Deploy{
 		DeploymentSpec: vcenter.DeploymentSpec{
@@ -163,7 +170,7 @@ func DeployFromOVF(ctx context.Context, c *govmomi.Client, rc *rest.Client, item
 	return vm != nil
 }
 
-// Deploy A  new Machine from baremental
+// 原生部署一个虚拟机
 func DeployFromBare(ctx context.Context, c *vim25.Client, name string, datacenter string,
 	resourcepool string, datastore string) (VmsHost, error) {
 	vmhost := VmsHost{}
@@ -205,28 +212,30 @@ func DeployFromBare(ctx context.Context, c *vim25.Client, name string, datacente
 	if err != nil {
 		return vmhost, err
 	}
-	GetHost(ctx, c, &vmhost)
+	GetVmHost(ctx, c, &vmhost)
 	return vmhost, nil
 }
 
 // 克隆虚拟机
-func CloneVm(exists string, new string, ctx context.Context, c *vim25.Client, datacenter string) error {
+func CloneVm(exists string, new string, ctx context.Context, c *vim25.Client,
+	datacenter string) (string, error) {
+	var name string
 	finder := find.NewFinder(c)
 	dc, err := finder.Datacenter(ctx, datacenter)
 	if err != nil {
-		return err
+		return name, err
 	}
 
 	finder.SetDatacenter(dc)
 
 	vm, err := finder.VirtualMachine(ctx, exists)
 	if err != nil {
-		return err
+		return name, err
 	}
 
 	folders, err := dc.Folders(ctx)
 	if err != nil {
-		return err
+		return name, err
 	}
 
 	spec := types.VirtualMachineCloneSpec{
@@ -235,21 +244,19 @@ func CloneVm(exists string, new string, ctx context.Context, c *vim25.Client, da
 
 	task, err := vm.Clone(ctx, folders.VmFolder, new, spec)
 	if err != nil {
-		return err
+		return name, err
 	}
 
 	info, err := task.WaitForResult(ctx)
 	if err != nil {
-		return err
+		return name, err
 	}
 
 	clone := object.NewVirtualMachine(c, info.Result.(types.ManagedObjectReference))
-	name, err := clone.ObjectName(ctx)
+	name, err = clone.ObjectName(ctx)
 	if err != nil {
-		return err
+		return name, err
 	}
 
-	fmt.Println(name)
-	return nil
-
+	return name, nil
 }

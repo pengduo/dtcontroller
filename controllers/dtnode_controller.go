@@ -19,7 +19,9 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
@@ -75,13 +77,16 @@ func (dtnodeReconciler *DtNodeReconciler) Reconcile(ctx context.Context,
 	if err != nil {
 		fmt.Println("error when building vm client")
 	}
+
+	//upadte status fields
 	version := vmclient.Version
-
 	dtnode.Status.Version = version
+	dtnode.Status.Phase = "Ready"
+	createTime := dtnode.ObjectMeta.CreationTimestamp
+	currentTime := time.Now()
+	age := currentTime.Local().UTC().Sub(createTime.Time)
+	dtnode.Status.Age = strconv.FormatFloat(age.Hours(), 'f', 2, 64)
 
-	fmt.Println("-----------------")
-	fmt.Println(dtnode.Status.Version)
-	fmt.Println("-----------------")
 	err = dtnodeReconciler.Status().Update(ctx, dtnode)
 	if err != nil {
 		return ctrl.Result{}, err

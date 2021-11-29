@@ -20,7 +20,7 @@ spec:
     - jsonPath: .spec.provider
       name: Provider
       type: string
-    - jsonPath: .status.age
+    - jsonPath: .status.phase
       name: Phase
       type: string
     - jsonPath: .status.version

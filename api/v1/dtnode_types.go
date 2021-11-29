@@ -50,7 +50,7 @@ type DtNodeStatus struct {
 }
 
 //+kubebuilder:printcolumn:name="Provider",type=string,JSONPath=`.spec.provider`
-//+kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.age`
+//+kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
 //+kubebuilder:printcolumn:name="Version",type=string,JSONPath=`.status.version`
 //+kubebuilder:printcolumn:name="Cpu",type=string,JSONPath=`.status.cpu`
 //+kubebuilder:printcolumn:name="Memory",type=string,JSONPath=`.status.memory`
