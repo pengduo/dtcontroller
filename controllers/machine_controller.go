@@ -136,7 +136,7 @@ func assignMachine(instance appsv1.Machine, dtnode appsv1.DtNode) *appsv1.Machin
 			log.Log.Info("分配机器成功", vmhost)
 		}
 	case "clone":
-		err = vmsdk.CloneVm("test01", instance.Name, ctx, vmClient.Client, "Datacenter")
+		_, err = vmsdk.CloneVm("test01", instance.Name, ctx, vmClient.Client, "Datacenter")
 		if err != nil {
 			log.Log.Info("部署失败")
 		} else {

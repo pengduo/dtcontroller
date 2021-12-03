@@ -73,25 +73,30 @@ func (dtnodeReconciler *DtNodeReconciler) Reconcile(ctx context.Context,
 	password := dtnode.Spec.Password
 	vURL := strings.Join([]string{"https://", username, ":", password, "@", ip, "/sdk"}, "")
 
+	dtnode.Status.Phase = "Ready"
+
 	vmclient, err := vmsdk.Vmclient(ctx, vURL, username, password)
 	if err != nil {
 		fmt.Println("error when building vm client")
+		dtnode.Status.Phase = "UnReady"
+		return ctrl.Result{}, nil
 	}
 
 	//upadte status fields
 	version := vmclient.Version
 	dtnode.Status.Version = version
-	dtnode.Status.Phase = "Ready"
+
 	createTime := dtnode.ObjectMeta.CreationTimestamp
 	currentTime := time.Now()
 	age := currentTime.Local().UTC().Sub(createTime.Time)
 	dtnode.Status.Age = strconv.FormatFloat(age.Hours(), 'f', 2, 64)
 
-	err = dtnodeReconciler.Status().Update(ctx, dtnode)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
+	vmsdk.GetDtNodeInfo(ctx, vmclient.Client, dtnode)
 
+	vms := vmsdk.GetVms(ctx, vmclient.Client)
+	dtnode.Status.Vms = len(vms)
+
+	dtnodeReconciler.Status().Update(ctx, dtnode)
 	return ctrl.Result{}, nil
 }
 
