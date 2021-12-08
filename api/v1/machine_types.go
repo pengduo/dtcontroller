@@ -14,25 +14,24 @@ type MachineSpec struct {
 
 	DtNode   string `json:"dtnode,omitempty"`
 	Type     string `json:"type,omitempty"`
-	HostName string `json:"hostname,omitempty"`
-	Ip       string `json:"ip,omitempty"`
-	Mac      string `json:"mac,omitempty"`
 	User     string `json:"user,omitempty"`
 	Password string `json:"password,omitempty"`
 	Cpu      string `json:"cpu,omitempty"`
 	Memory   string `json:"memory,omitempty"`
 	Disk     string `json:"disk,omitempty"`
-	Command  string `json:"command,omitempty"`
 }
 
 // MachineStatus defines the observed state of Machine
 type MachineStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Phase string `json:"phase,omitempty"`
+	Phase    string `json:"phase,omitempty"`
+	HostName string `json:"hostname,omitempty"`
+	Ip       string `json:"ip,omitempty"`
+	Mac      string `json:"mac,omitempty"`
 }
 
-// +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.phase`
+// +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
 // +kubebuilder:printcolumn:name="HostName",type=string,JSONPath=`.spec.hostname`
 // +kubebuilder:printcolumn:name="Ip",type=string,JSONPath=`.spec.ip`
 // +kubebuilder:printcolumn:name="Mac",type=string,JSONPath=`.spec.mac`

@@ -18,7 +18,7 @@ spec:
   versions:
   - additionalPrinterColumns:
     - jsonPath: .status.phase
-      name: Status
+      name: Phase
       type: string
     - jsonPath: .spec.hostname
       name: HostName
@@ -61,19 +61,11 @@ spec:
           spec:
             description: MachineSpec defines the desired state of Machine
             properties:
-              command:
-                type: string
               cpu:
                 type: string
               disk:
                 type: string
               dtnode:
-                type: string
-              hostname:
-                type: string
-              ip:
-                type: string
-              mac:
                 type: string
               memory:
                 type: string
@@ -87,6 +79,12 @@ spec:
           status:
             description: MachineStatus defines the observed state of Machine
             properties:
+              hostname:
+                type: string
+              ip:
+                type: string
+              mac:
+                type: string
               phase:
                 description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
                   of cluster Important: Run "make" to regenerate code after modifying

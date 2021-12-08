@@ -19,9 +19,11 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/vmware/govmomi/object"
+	"github.com/vmware/govmomi/vim25/mo"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/cri-api/pkg/errors"
@@ -88,7 +90,7 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			return ctrl.Result{}, err
 		}
 	}
-
+	r.Status().Update(ctx, instance)
 	return ctrl.Result{}, nil
 }
 
@@ -129,7 +131,8 @@ func assignMachine(instance appsv1.Machine, dtnode appsv1.DtNode) *appsv1.Machin
 	}
 	switch instance.Spec.Type {
 	case "bare":
-		vmhost, err := vmsdk.DeployFromBare(context.Background(), vmClient.Client, instance.Name, "Datacenter", "Resources", "[datastore1]")
+		vmhost, err := vmsdk.DeployFromBare(context.Background(),
+			vmClient.Client, instance.Name, "Datacenter", "Resources", "[datastore1]")
 		if err != nil {
 			log.Log.Info("部署失败")
 		} else {
@@ -141,6 +144,19 @@ func assignMachine(instance appsv1.Machine, dtnode appsv1.DtNode) *appsv1.Machin
 			log.Log.Info("部署失败")
 		} else {
 			log.Log.Info("分配机器成功")
+		}
+	}
+	var vm = mo.VirtualMachine{}
+	vmsdk.GetVmInfo(ctx, vmClient.Client, instance.Name, &vm)
+
+	instance.Status.Phase = "ready"
+
+	if !reflect.DeepEqual(vm, mo.VirtualMachine{}) {
+		if vm.Summary.Runtime.Host.Value != "" {
+			instance.Status.HostName = vm.Summary.Runtime.Host.Value
+		}
+		if vm.Summary.Guest.IpAddress != "" {
+			instance.Status.Ip = vm.Summary.Guest.IpAddress
 		}
 	}
 

@@ -1,6 +1,7 @@
 package vmsdk
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -112,6 +113,30 @@ func GetVms(ctx context.Context, client *vim25.Client) []mo.VirtualMachine {
 		panic(err)
 	}
 	return vms
+}
+
+// 获取虚拟机信息
+func GetVmInfo(ctx context.Context, c *vim25.Client, vmName string, vvm *mo.VirtualMachine) {
+	m := view.NewManager(c)
+	v, err := m.CreateContainerView(ctx, c.ServiceContent.RootFolder, []string{"VirtualMachine"}, true)
+	if err != nil {
+		panic(err)
+	}
+
+	defer v.Destroy(ctx)
+	var vms []mo.VirtualMachine
+	err = v.Retrieve(ctx, []string{"VirtualMachine"}, []string{"summary"}, &vms)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, vm := range vms {
+		// 判断虚拟机名称是否相同，相同的话，vm 就是查找到主机
+		if vm.Summary.Config.Name == vmName {
+			fmt.Printf("%s: %s\n", vm.Summary.Config.Name, vm.Summary.Config.GuestFullName)
+			vvm = &vm
+		}
+	}
 }
 
 // 读取主机信息

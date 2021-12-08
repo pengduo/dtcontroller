@@ -4,7 +4,6 @@ metadata:
   name: machine-sample1
 spec:
   type: clone
-  command: "sum=0; for i in `seq 1 100`; do sum=$[$i+$sum]; done; echo $sum"
   user: deploy
   dtnode: "dtnode-sample"
   password: deploy@1298
