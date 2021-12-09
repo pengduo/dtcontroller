@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"strings"
 
@@ -35,9 +34,6 @@ import (
 	appsv1 "dtcontroller/api/v1"
 	"dtcontroller/vmsdk"
 )
-
-// finalizer tag
-const machineFinalizer = "machine.finalizers.dtwave.com"
 
 // MachineReconciler reconciles a Machine object
 type MachineReconciler struct {
@@ -79,17 +75,6 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		assignMachine(*instance, *dtnode)
 	}
 
-	// pre finalizer
-	if !instance.DeletionTimestamp.IsZero() {
-		return ctrl.Result{}, r.instanceFinalizer(ctx, instance, dtnode)
-	}
-
-	if !containsString(instance.Finalizers, machineFinalizer) {
-		instance.Finalizers = append(instance.Finalizers, machineFinalizer)
-		if err := r.Client.Update(ctx, instance); err != nil {
-			return ctrl.Result{}, err
-		}
-	}
 	r.Status().Update(ctx, instance)
 	return ctrl.Result{}, nil
 }
@@ -129,27 +114,35 @@ func assignMachine(instance appsv1.Machine, dtnode appsv1.DtNode) *appsv1.Machin
 	if err != nil {
 		log.Log.Info(err.Error())
 	}
+
 	switch instance.Spec.Type {
 	case "bare":
+		if instance.Status.Phase == "ready" {
+			break
+		}
 		vmhost, err := vmsdk.DeployFromBare(context.Background(),
 			vmClient.Client, instance.Name, "Datacenter", "Resources", "[datastore1]")
 		if err != nil {
 			log.Log.Info("部署失败")
+			instance.Status.Phase = "failed"
 		} else {
-			log.Log.Info("分配机器成功", vmhost)
+			log.Log.Info("部署机器成功", vmhost)
 		}
 	case "clone":
+		if instance.Status.Phase == "ready" {
+			break
+		}
 		_, err = vmsdk.CloneVm("test01", instance.Name, ctx, vmClient.Client, "Datacenter")
 		if err != nil {
 			log.Log.Info("部署失败")
+			instance.Status.Phase = "failed"
 		} else {
-			log.Log.Info("分配机器成功")
+			instance.Status.Phase = "ready"
+			log.Log.Info("部署机器成功")
 		}
 	}
 	var vm = mo.VirtualMachine{}
 	vmsdk.GetVmInfo(ctx, vmClient.Client, instance.Name, &vm)
-
-	instance.Status.Phase = "ready"
 
 	if !reflect.DeepEqual(vm, mo.VirtualMachine{}) {
 		if vm.Summary.Runtime.Host.Value != "" {
@@ -161,17 +154,6 @@ func assignMachine(instance appsv1.Machine, dtnode appsv1.DtNode) *appsv1.Machin
 	}
 
 	return &instance
-}
-
-func (r *MachineReconciler) instanceFinalizer(ctx context.Context,
-	instance *appsv1.Machine, dtnode *appsv1.DtNode) error {
-	fmt.Println("-------")
-	fmt.Println(instance.Name, "\t", dtnode.Name)
-	fmt.Println("-------")
-
-	// 预删除执行完毕，移除 nodeFinalizer
-	instance.Finalizers = removeString(instance.Finalizers, machineFinalizer)
-	return r.Client.Update(ctx, instance)
 }
 
 func removeString(slice []string, s string) (result []string) {

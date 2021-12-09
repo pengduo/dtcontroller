@@ -87,20 +87,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Machine")
 		os.Exit(1)
 	}
-	if err = (&controllers.IotReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Iot")
-		os.Exit(1)
-	}
-	if err = (&controllers.ProxyReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Proxy")
-		os.Exit(1)
-	}
 	if err = (&controllers.DtNodeReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),

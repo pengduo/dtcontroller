@@ -3,8 +3,6 @@
 # It should be run by config/default
 resources:
 - bases/apps.dtwave.com_machines.yaml
-- bases/apps.dtwave.com_iots.yaml
-- bases/apps.dtwave.com_proxies.yaml
 - bases/apps.dtwave.com_dtnodes.yaml
 - bases/apps.dtwave.com_machinegroups.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
