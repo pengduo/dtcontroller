@@ -10,3 +10,4 @@ spec:
   cpu: "2"
   memory: "1"
   disk: "100"
+

@@ -34,6 +34,8 @@ type VmsHost struct {
 	State     string
 	Processor string
 }
+
+// 主机集合
 type VmsHosts struct {
 	VmsHosts []VmsHost
 }
@@ -45,6 +47,7 @@ func NewVmsHosts() *VmsHosts {
 	}
 }
 
+// 增加主机
 func (vmshosts *VmsHosts) AddHost(name string, ip string, cpu string,
 	memory string, disk string, state string, processor string) {
 	host := &VmsHost{
@@ -70,7 +73,7 @@ func (vmshosts *VmsHosts) SelectHost(name string) string {
 	return ip
 }
 
-//开机
+// 开机
 func VmPowerOn(ctx context.Context, vm *object.VirtualMachine) {
 	_, err := vm.PowerOn(ctx)
 	if err != nil {
@@ -78,7 +81,7 @@ func VmPowerOn(ctx context.Context, vm *object.VirtualMachine) {
 	}
 }
 
-//关机
+// 关机
 func VmShutdown(ctx context.Context, vm *object.VirtualMachine) {
 	// 第一个返回值是 task，我认为没必要处理，如果你要处理的话可以接收后处理
 	_, err := vm.PowerOff(ctx)
@@ -87,7 +90,7 @@ func VmShutdown(ctx context.Context, vm *object.VirtualMachine) {
 	}
 }
 
-//删除
+// 删除虚拟机
 func VmDelete(ctx context.Context, vm *object.VirtualMachine) {
 	// task 可以处理，也可以不处理
 	task, err := vm.Destroy(ctx)
@@ -102,13 +105,15 @@ func VmDelete(ctx context.Context, vm *object.VirtualMachine) {
 // 获取虚拟机
 func GetVms(ctx context.Context, client *vim25.Client) []mo.VirtualMachine {
 	m := view.NewManager(client)
-	v, err := m.CreateContainerView(ctx, client.ServiceContent.RootFolder, []string{"VirtualMachine"}, true)
+	v, err := m.CreateContainerView(ctx, client.ServiceContent.RootFolder,
+		[]string{"VirtualMachine"}, true)
 	if err != nil {
 		panic(err)
 	}
 	defer v.Destroy(ctx)
 	var vms []mo.VirtualMachine
-	err = v.Retrieve(ctx, []string{"VirtualMachine"}, []string{"summary", "runtime", "datastore"}, &vms)
+	err = v.Retrieve(ctx, []string{"VirtualMachine"},
+		[]string{"summary", "runtime", "datastore"}, &vms)
 	if err != nil {
 		panic(err)
 	}
@@ -118,14 +123,16 @@ func GetVms(ctx context.Context, client *vim25.Client) []mo.VirtualMachine {
 // 获取虚拟机信息
 func GetVmInfo(ctx context.Context, c *vim25.Client, vmName string, vvm *mo.VirtualMachine) {
 	m := view.NewManager(c)
-	v, err := m.CreateContainerView(ctx, c.ServiceContent.RootFolder, []string{"VirtualMachine"}, true)
+	v, err := m.CreateContainerView(ctx, c.ServiceContent.RootFolder,
+		[]string{"VirtualMachine"}, true)
 	if err != nil {
 		panic(err)
 	}
 
 	defer v.Destroy(ctx)
 	var vms []mo.VirtualMachine
-	err = v.Retrieve(ctx, []string{"VirtualMachine"}, []string{"summary"}, &vms)
+	err = v.Retrieve(ctx, []string{"VirtualMachine"},
+		[]string{"summary"}, &vms)
 	if err != nil {
 		panic(err)
 	}
@@ -142,13 +149,15 @@ func GetVmInfo(ctx context.Context, c *vim25.Client, vmName string, vvm *mo.Virt
 // 读取主机信息
 func GetVmHosts(ctx context.Context, client *vim25.Client, vmshosts *VmsHosts) {
 	m := view.NewManager(client)
-	v, err := m.CreateContainerView(ctx, client.ServiceContent.RootFolder, []string{"HostSystem"}, true)
+	v, err := m.CreateContainerView(ctx, client.ServiceContent.RootFolder,
+		[]string{"HostSystem"}, true)
 	if err != nil {
 		panic(err)
 	}
 	defer v.Destroy(ctx)
 	var hss []mo.HostSystem
-	err = v.Retrieve(ctx, []string{"HostSystem"}, []string{"summary"}, &hss)
+	err = v.Retrieve(ctx, []string{"HostSystem"},
+		[]string{"summary"}, &hss)
 	if err != nil {
 		panic(err)
 	}
@@ -174,7 +183,8 @@ func GetDtNodeInfo(ctx context.Context, client *vim25.Client, dtNode *appsv1.DtN
 	}
 	defer v.Destroy(ctx)
 	var hss []mo.HostSystem
-	err = v.Retrieve(ctx, []string{"HostSystem"}, []string{"summary"}, &hss)
+	err = v.Retrieve(ctx, []string{"HostSystem"},
+		[]string{"summary"}, &hss)
 	if err != nil {
 		panic(err)
 	}

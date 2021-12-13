@@ -1,23 +1,8 @@
-/*
-Copyright 2021.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package controllers
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -46,19 +31,9 @@ type MachineReconciler struct {
 //+kubebuilder:rbac:groups=apps.dtwave.com,resources=machines/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=apps.dtwave.com,resources=machines/finalizers,verbs=update
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the Machine object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 
-	// your logic here
 	instance := &appsv1.Machine{}
 	err := r.Client.Get(context.TODO(), req.NamespacedName, instance)
 	if err != nil {
@@ -67,26 +42,22 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 		return reconcile.Result{}, err
 	}
+
 	dtnode := &appsv1.DtNode{}
-	err = r.Client.Get(ctx, client.ObjectKey{Name: instance.Spec.DtNode}, dtnode)
+	dtnodeName := instance.Spec.DtNode
+	err = r.Client.Get(ctx, client.ObjectKey{Name: dtnodeName}, dtnode)
+	fmt.Println("dtnodeName", dtnodeName)
 	if err != nil {
 		log.Info(err.Error())
-	} else {
-		assignMachine(*instance, *dtnode)
+		return ctrl.Result{}, nil
 	}
+	instance = assignMachine(*instance, *dtnode)
 
 	r.Status().Update(ctx, instance)
 	return ctrl.Result{}, nil
 }
 
-// SetupWithManager sets up the controller with the Manager.
-func (r *MachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&appsv1.Machine{}).
-		Complete(r)
-}
-
-//destoryMachine used to delete machine from vcenter
+//从vcenter删除虚拟机
 func destoryMachine(instance appsv1.Machine, dtnode appsv1.DtNode) *appsv1.Machine {
 	log.Log.Info("开始删除机器实例")
 	ctx := context.Background()
@@ -173,4 +144,11 @@ func containsString(slice []string, s string) bool {
 		}
 	}
 	return false
+}
+
+// SetupWithManager sets up the controller with the Manager.
+func (r *MachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&appsv1.Machine{}).
+		Complete(r)
 }
