@@ -59,16 +59,18 @@ spec:
           metadata:
             type: object
           spec:
-            description: MachineSpec defines the desired state of Machine
+            description: Machine结构体 MachineSpec defines the desired state of Machine
             properties:
               cpu:
-                type: string
+                format: int32
+                type: integer
               disk:
                 type: string
               dtnode:
                 type: string
               memory:
-                type: string
+                format: int64
+                type: integer
               password:
                 type: string
               type:
@@ -77,13 +79,19 @@ spec:
                 type: string
             type: object
           status:
-            description: MachineStatus defines the observed state of Machine
+            description: 状态信息 MachineStatus defines the observed state of Machine
             properties:
+              cpuused:
+                type: string
+              diskused:
+                type: string
               hostname:
                 type: string
               ip:
                 type: string
               mac:
+                type: string
+              memoryused:
                 type: string
               phase:
                 description: 'INSERT ADDITIONAL STATUS FIELD - define observed state

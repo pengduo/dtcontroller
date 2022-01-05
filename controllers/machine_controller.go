@@ -112,8 +112,8 @@ func assignMachine(instance appsv1.Machine, dtnode appsv1.DtNode) *appsv1.Machin
 			log.Log.Info("部署机器成功")
 		}
 	}
-	var vm = mo.VirtualMachine{}
-	vmsdk.GetVmInfo(ctx, vmClient.Client, instance.Name, &vm)
+	var vm mo.VirtualMachine
+	vmsdk.GetVmInfo(ctx, vmClient.Client, instance.Name, vm)
 
 	if !reflect.DeepEqual(vm, mo.VirtualMachine{}) {
 		if vm.Summary.Runtime.Host.Value != "" {

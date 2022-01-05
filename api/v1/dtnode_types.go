@@ -23,6 +23,7 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+// DtNode结构体
 // DtNodeSpec defines the desired state of DtNode
 type DtNodeSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -33,6 +34,7 @@ type DtNodeSpec struct {
 	Password string `json:"password,omitempty"`
 }
 
+// 状态信息
 // DtNodeStatus defines the observed state of DtNode
 type DtNodeStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster

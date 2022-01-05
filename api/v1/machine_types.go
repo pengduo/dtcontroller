@@ -7,6 +7,7 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+// Machine结构体
 // MachineSpec defines the desired state of Machine
 type MachineSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -16,19 +17,23 @@ type MachineSpec struct {
 	Type     string `json:"type,omitempty"`
 	User     string `json:"user,omitempty"`
 	Password string `json:"password,omitempty"`
-	Cpu      string `json:"cpu,omitempty"`
-	Memory   string `json:"memory,omitempty"`
+	Cpu      int32  `json:"cpu,omitempty"`
+	Memory   int64  `json:"memory,omitempty"`
 	Disk     string `json:"disk,omitempty"`
 }
 
+// 状态信息
 // MachineStatus defines the observed state of Machine
 type MachineStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Phase    string `json:"phase,omitempty"`
-	HostName string `json:"hostname,omitempty"`
-	Ip       string `json:"ip,omitempty"`
-	Mac      string `json:"mac,omitempty"`
+	Phase      string `json:"phase,omitempty"`
+	HostName   string `json:"hostname,omitempty"`
+	Ip         string `json:"ip,omitempty"`
+	Mac        string `json:"mac,omitempty"`
+	CpuUsed    string `json:"cpuused,omitempty"`
+	MemoryUsed string `json:"memoryused,omitempty"`
+	DiskUsed   string `json:"diskused,omitempty"`
 }
 
 // +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`

@@ -62,7 +62,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: DtNodeSpec defines the desired state of DtNode
+            description: DtNode结构体 DtNodeSpec defines the desired state of DtNode
             properties:
               ip:
                 type: string
@@ -76,7 +76,7 @@ spec:
                 type: string
             type: object
           status:
-            description: DtNodeStatus defines the observed state of DtNode
+            description: 状态信息 DtNodeStatus defines the observed state of DtNode
             properties:
               age:
                 type: string
