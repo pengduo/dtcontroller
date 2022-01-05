@@ -242,7 +242,8 @@ func DeployFromOVF(ctx context.Context, c *govmomi.Client, rc *rest.Client, item
 }
 
 // 原生部署一个虚拟机
-func DeployFromBare(ctx context.Context, c *vim25.Client, name string, datacenter string,
+func DeployFromBare(ctx context.Context, c *vim25.Client,
+	name string, datacenter string,
 	resourcepool string, datastore string) (VmsHost, error) {
 	vmhost := VmsHost{}
 
