@@ -11,6 +11,7 @@ import (
 	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/object"
+	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/vapi/library"
 	"github.com/vmware/govmomi/vapi/rest"
 	"github.com/vmware/govmomi/vapi/vcenter"
@@ -21,9 +22,12 @@ import (
 	"golang.org/x/net/context"
 )
 
+var ctx = context.Background()
+
 //分为主机操作和虚拟机操作
 //vmhost和vm
 
+//主机操作开始
 // 主机结构体
 type VmsHost struct {
 	Name      string
@@ -73,6 +77,7 @@ func (vmshosts *VmsHosts) SelectHost(name string) string {
 	return ip
 }
 
+//虚拟机操作开始
 // 开机
 func VmPowerOn(ctx context.Context, vm *object.VirtualMachine) {
 	_, err := vm.PowerOn(ctx)
@@ -121,7 +126,7 @@ func GetVms(ctx context.Context, client *vim25.Client) []mo.VirtualMachine {
 }
 
 // 获取虚拟机信息
-func GetVmInfo(ctx context.Context, c *vim25.Client, vmName string, vvm *mo.VirtualMachine) {
+func GetVmInfo(ctx context.Context, c *vim25.Client, vmName string, vvm mo.VirtualMachine) {
 	m := view.NewManager(c)
 	v, err := m.CreateContainerView(ctx, c.ServiceContent.RootFolder,
 		[]string{"VirtualMachine"}, true)
@@ -141,7 +146,7 @@ func GetVmInfo(ctx context.Context, c *vim25.Client, vmName string, vvm *mo.Virt
 		// 判断虚拟机名称是否相同，相同的话，vm 就是查找到主机
 		if vm.Summary.Config.Name == vmName {
 			fmt.Printf("%s: %s\n", vm.Summary.Config.Name, vm.Summary.Config.GuestFullName)
-			vvm = &vm
+			vvm = vm
 		}
 	}
 }
@@ -209,7 +214,9 @@ func GetDtNodeInfo(ctx context.Context, client *vim25.Client, dtNode *appsv1.DtN
 }
 
 // 使用OVF模版部署虚拟机
-func DeployFromOVF(ctx context.Context, c *govmomi.Client, rc *rest.Client, item library.Item, name string, datastoreID string, networkKey string, networkValue string, resourcePoolID string, folderID string) bool {
+func DeployFromOVF(ctx context.Context, c *govmomi.Client,
+	rc *rest.Client, item library.Item, name string, datastoreID string,
+	networkKey string, networkValue string, resourcePoolID string, folderID string) bool {
 	deploy := vcenter.Deploy{
 		DeploymentSpec: vcenter.DeploymentSpec{
 			Name:               name,
@@ -330,4 +337,117 @@ func CloneVm(exists string, new string, ctx context.Context, c *vim25.Client,
 	}
 
 	return name, nil
+}
+
+//原生创建虚拟机
+func NewVirtualMachine(c *vim25.Client, vmName string,
+	ds string, cpu int32, memory int64, guestId string) (mo.VirtualMachine, error) {
+	m := view.NewManager(c)
+	v, err := m.CreateContainerView(ctx, c.ServiceContent.RootFolder, nil, true)
+	if err != nil {
+		log.Println(err)
+		return mo.VirtualMachine{}, err
+	}
+	defer v.Destroy(ctx)
+	//检查ds是否存在
+	var datastore mo.Datastore
+	err = v.RetrieveWithFilter(ctx, []string{"Datastore"}, []string{"summary"},
+		&datastore, property.Filter{
+			"name": ds,
+		})
+	if err != nil {
+		log.Println(err)
+		return mo.VirtualMachine{}, err
+	}
+	//检查虚拟机名称重复
+	var vm mo.VirtualMachine
+	err = v.RetrieveWithFilter(ctx, []string{"VirtualMachine"}, []string{"summary"},
+		&vm, property.Filter{
+			"name": vmName,
+		})
+	if err == nil {
+		log.Println("虚拟机已经存在:", vmName)
+		return mo.VirtualMachine{}, err
+	}
+	//开始新建虚拟机
+	vmSpec := types.VirtualMachineConfigSpec{
+		Name:    vmName,
+		GuestId: guestId,
+		Files: &types.VirtualMachineFileInfo{
+			VmPathName: "[" + ds + "]",
+		},
+		NumCPUs:           cpu,
+		MemoryMB:          memory,
+		NpivOnNonRdmDisks: types.NewBool(true),
+	}
+	//查找数据中心
+	finder := find.NewFinder(c)
+	dc, err := finder.DefaultDatacenter(ctx)
+	if err != nil {
+		log.Println(err)
+		return mo.VirtualMachine{}, err
+	}
+	finder.SetDatacenter(dc)
+	folders, err := dc.Folders(ctx)
+	if err != nil {
+		log.Println(err)
+		return mo.VirtualMachine{}, err
+	}
+	//查找资源池
+	pool, err := finder.ResourcePool(ctx, "Resources")
+	if err != nil {
+		log.Panicln(err)
+		return mo.VirtualMachine{}, err
+	}
+	task, err := folders.VmFolder.CreateVM(ctx, vmSpec, pool, nil)
+	if err != nil {
+		log.Println(err)
+		return mo.VirtualMachine{}, err
+	}
+	info, err := task.WaitForResult(ctx)
+	if err != nil {
+		log.Println(err)
+		return mo.VirtualMachine{}, err
+	}
+	log.Println(info)
+
+	//检索虚拟机是否创建成功
+	vm = mo.VirtualMachine{}
+	err = v.RetrieveWithFilter(ctx, []string{"VirtualMachine"}, []string{"summary"},
+		&vm, property.Filter{
+			"name": vmName,
+		})
+	if err != nil {
+		log.Println("虚拟机创建失败:", vmName)
+		return mo.VirtualMachine{}, err
+	}
+	return vm, nil
+}
+
+//清理孤立的虚拟机
+func cleanOrphaned(ctx context.Context, c *vim25.Client, vms *[]mo.VirtualMachine) {
+	for _, vm := range *vms {
+		if vm.Summary.Runtime.ConnectionState == "orphaned" {
+			fmt.Println("清理孤立虚拟机：", vm.Summary.Config.Name)
+			ovm := mo2object(c, &vm)
+			vmDelete(ctx, ovm)
+		}
+	}
+}
+
+//mo类型的虚拟机转换成object类型的
+func mo2object(c *vim25.Client, mvm *mo.VirtualMachine) *object.VirtualMachine {
+	vm := object.NewVirtualMachine(c, mvm.Reference())
+	return vm
+}
+
+//删除虚拟机
+func vmDelete(ctx context.Context, vm *object.VirtualMachine) {
+	task, err := vm.Destroy(ctx)
+	if err != nil {
+		panic(err)
+	}
+	if task.Wait(ctx) != nil {
+		panic(err)
+	}
 }

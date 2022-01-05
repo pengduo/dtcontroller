@@ -13,3 +13,4 @@ govc vm.create -m 256 -c 1 -disk 10G -ds bigdata -dc ha-datacenter test2
 * `-disk`指定磁盘
 
 
+
