@@ -51,8 +51,12 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		log.Info(err.Error())
 		return ctrl.Result{}, nil
 	}
-	instance = assignMachine(*instance, *dtnode)
 
+	instance, err = assignMachine(*instance, *dtnode)
+	if err != nil {
+		log.Info(err.Error())
+		return ctrl.Result{}, nil
+	}
 	r.Status().Update(ctx, instance)
 	return ctrl.Result{}, nil
 }
@@ -74,8 +78,8 @@ func destoryMachine(instance appsv1.Machine, dtnode appsv1.DtNode) *appsv1.Machi
 	return &instance
 }
 
-//分配Machine资源处理方法
-func assignMachine(instance appsv1.Machine, dtnode appsv1.DtNode) *appsv1.Machine {
+// 分配Machine资源处理方法
+func assignMachine(instance appsv1.Machine, dtnode appsv1.DtNode) (*appsv1.Machine, error) {
 	log.Log.Info("开始分配机器实例")
 	ctx := context.Background()
 	vURL := strings.Join([]string{"https://", dtnode.Spec.User, ":",
@@ -84,6 +88,7 @@ func assignMachine(instance appsv1.Machine, dtnode appsv1.DtNode) *appsv1.Machin
 	vmClient, err := vmsdk.Vmclient(ctx, vURL, dtnode.Spec.User, dtnode.Spec.Password)
 	if err != nil {
 		log.Log.Info(err.Error())
+		return &appsv1.Machine{}, err
 	}
 
 	switch instance.Spec.Type {
@@ -124,10 +129,10 @@ func assignMachine(instance appsv1.Machine, dtnode appsv1.DtNode) *appsv1.Machin
 		}
 	}
 
-	return &instance
+	return &instance, nil
 }
 
-func removeString(slice []string, s string) (result []string) {
+func RemoveString(slice []string, s string) (result []string) {
 	for _, item := range slice {
 		if item == s {
 			continue
@@ -137,7 +142,7 @@ func removeString(slice []string, s string) (result []string) {
 	return
 }
 
-func containsString(slice []string, s string) bool {
+func ContainsString(slice []string, s string) bool {
 	for _, item := range slice {
 		if item == s {
 			return true
@@ -146,6 +151,7 @@ func containsString(slice []string, s string) bool {
 	return false
 }
 
+// 注册控制器
 // SetupWithManager sets up the controller with the Manager.
 func (r *MachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

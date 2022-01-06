@@ -8,6 +8,7 @@ import (
 	"golang.org/x/net/context"
 )
 
+// 内容库操作
 func GetLibraryItem(ctx context.Context, rc *rest.Client, libraryName string, libraryItemType string, libraryItemName string) (*library.Item, error) {
 	// 需要通过 rc 来获得 library.Manager 对象
 	m := library.NewManager(rc)

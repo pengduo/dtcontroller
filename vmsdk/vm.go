@@ -3,10 +3,6 @@ package vmsdk
 import (
 	"fmt"
 	"log"
-	"strconv"
-	"strings"
-
-	appsv1 "dtcontroller/api/v1"
 
 	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/find"
@@ -22,62 +18,8 @@ import (
 	"golang.org/x/net/context"
 )
 
-var ctx = context.Background()
+//虚拟机操作
 
-//分为主机操作和虚拟机操作
-//vmhost和vm
-
-//主机操作开始
-// 主机结构体
-type VmsHost struct {
-	Name      string
-	Ip        string
-	Cpu       string
-	Memory    string
-	Disk      string
-	State     string
-	Processor string
-}
-
-// 主机集合
-type VmsHosts struct {
-	VmsHosts []VmsHost
-}
-
-// 初始化结构体
-func NewVmsHosts() *VmsHosts {
-	return &VmsHosts{
-		VmsHosts: make([]VmsHost, 10),
-	}
-}
-
-// 增加主机
-func (vmshosts *VmsHosts) AddHost(name string, ip string, cpu string,
-	memory string, disk string, state string, processor string) {
-	host := &VmsHost{
-		Name:      name,
-		Ip:        ip,
-		Cpu:       cpu,
-		Memory:    memory,
-		Disk:      disk,
-		State:     state,
-		Processor: processor,
-	}
-	vmshosts.VmsHosts = append(vmshosts.VmsHosts, *host)
-}
-
-// 查询主机ip
-func (vmshosts *VmsHosts) SelectHost(name string) string {
-	ip := "None"
-	for _, hosts := range vmshosts.VmsHosts {
-		if hosts.Name == name {
-			ip = hosts.Ip
-		}
-	}
-	return ip
-}
-
-//虚拟机操作开始
 // 开机
 func VmPowerOn(ctx context.Context, vm *object.VirtualMachine) {
 	_, err := vm.PowerOn(ctx)
@@ -91,18 +33,6 @@ func VmShutdown(ctx context.Context, vm *object.VirtualMachine) {
 	// 第一个返回值是 task，我认为没必要处理，如果你要处理的话可以接收后处理
 	_, err := vm.PowerOff(ctx)
 	if err != nil {
-		panic(err)
-	}
-}
-
-// 删除虚拟机
-func VmDelete(ctx context.Context, vm *object.VirtualMachine) {
-	// task 可以处理，也可以不处理
-	task, err := vm.Destroy(ctx)
-	if err != nil {
-		panic(err)
-	}
-	if task.Wait(ctx) != nil {
 		panic(err)
 	}
 }
@@ -151,68 +81,6 @@ func GetVmInfo(ctx context.Context, c *vim25.Client, vmName string, vvm mo.Virtu
 	}
 }
 
-// 读取主机信息
-func GetVmHosts(ctx context.Context, client *vim25.Client, vmshosts *VmsHosts) {
-	m := view.NewManager(client)
-	v, err := m.CreateContainerView(ctx, client.ServiceContent.RootFolder,
-		[]string{"HostSystem"}, true)
-	if err != nil {
-		panic(err)
-	}
-	defer v.Destroy(ctx)
-	var hss []mo.HostSystem
-	err = v.Retrieve(ctx, []string{"HostSystem"},
-		[]string{"summary"}, &hss)
-	if err != nil {
-		panic(err)
-	}
-	for _, hs := range hss {
-		s := hs.Summary
-		h := s.Hardware
-		z := s.QuickStats
-		ncpu := int32(h.NumCpuCores)
-		cpu := strings.Join([]string{strconv.Itoa(int(z.OverallCpuUsage)), "/", strconv.Itoa(int(ncpu * h.CpuMhz))}, "")
-		memory := strings.Join([]string{strconv.Itoa(int(z.OverallMemoryUsage)), "/", strconv.Itoa(int(h.MemorySize >> 20))}, "")
-		// todo
-		vmshosts.AddHost(hs.Name, "", cpu, memory, "", string(s.Runtime.ConnectionState), h.CpuModel)
-	}
-}
-
-//回填DtNode信息
-func GetDtNodeInfo(ctx context.Context, client *vim25.Client, dtNode *appsv1.DtNode) {
-	m := view.NewManager(client)
-	v, err := m.CreateContainerView(ctx, client.ServiceContent.RootFolder,
-		[]string{"HostSystem"}, true)
-	if err != nil {
-		panic(err)
-	}
-	defer v.Destroy(ctx)
-	var hss []mo.HostSystem
-	err = v.Retrieve(ctx, []string{"HostSystem"},
-		[]string{"summary"}, &hss)
-	if err != nil {
-		panic(err)
-	}
-	var cpuUsage int32
-	var cpuAll int32
-	var memoryUsage int32
-	var memoryAll int32
-
-	for _, hs := range hss {
-		s := hs.Summary
-		h := s.Hardware
-		z := s.QuickStats
-		ncpu := int32(h.NumCpuCores)
-		cpuUsage = z.OverallCpuUsage + cpuUsage
-		cpuAll = ncpu*h.CpuMhz + cpuAll
-		memoryUsage = z.OverallMemoryUsage + memoryUsage
-		memoryAll = memoryAll + int32(h.MemorySize)>>20
-	}
-	dtNode.Status.Cpu = strings.Join([]string{strconv.Itoa(int(cpuUsage)), "/", strconv.Itoa(int(cpuAll))}, "")
-	dtNode.Status.Memory = strings.Join([]string{strconv.Itoa(int(memoryUsage)), "/", strconv.Itoa(int(memoryAll))}, "")
-	dtNode.Status.Hosts = len(hss)
-}
-
 // 使用OVF模版部署虚拟机
 func DeployFromOVF(ctx context.Context, c *govmomi.Client,
 	rc *rest.Client, item library.Item, name string, datastoreID string,
@@ -251,8 +119,8 @@ func DeployFromOVF(ctx context.Context, c *govmomi.Client,
 // 原生部署一个虚拟机
 func DeployFromBare(ctx context.Context, c *vim25.Client,
 	name string, datacenter string,
-	resourcepool string, datastore string) (VmsHost, error) {
-	vmhost := VmsHost{}
+	resourcepool string, datastore string) (Host, error) {
+	vmhost := Host{}
 
 	finder := find.NewFinder(c)
 	dc, err := finder.Datacenter(ctx, datacenter)
@@ -425,24 +293,24 @@ func NewVirtualMachine(c *vim25.Client, vmName string,
 }
 
 //清理孤立的虚拟机
-func cleanOrphaned(ctx context.Context, c *vim25.Client, vms *[]mo.VirtualMachine) {
+func CleanOrphaned(ctx context.Context, c *vim25.Client, vms *[]mo.VirtualMachine) {
 	for _, vm := range *vms {
 		if vm.Summary.Runtime.ConnectionState == "orphaned" {
-			fmt.Println("清理孤立虚拟机：", vm.Summary.Config.Name)
-			ovm := mo2object(c, &vm)
-			vmDelete(ctx, ovm)
+			fmt.Println("清理孤立虚拟机:", vm.Summary.Config.Name)
+			ovm := Mo2object(c, &vm)
+			VmDelete(ctx, ovm)
 		}
 	}
 }
 
 //mo类型的虚拟机转换成object类型的
-func mo2object(c *vim25.Client, mvm *mo.VirtualMachine) *object.VirtualMachine {
+func Mo2object(c *vim25.Client, mvm *mo.VirtualMachine) *object.VirtualMachine {
 	vm := object.NewVirtualMachine(c, mvm.Reference())
 	return vm
 }
 
 //删除虚拟机
-func vmDelete(ctx context.Context, vm *object.VirtualMachine) {
+func VmDelete(ctx context.Context, vm *object.VirtualMachine) {
 	task, err := vm.Destroy(ctx)
 	if err != nil {
 		panic(err)
