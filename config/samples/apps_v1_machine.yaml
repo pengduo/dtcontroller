@@ -1,13 +1,13 @@
 apiVersion: apps.dtwave.com/v1
 kind: Machine
 metadata:
-  name: machine-sample1
+  name: machine-sample
 spec:
-  type: clone
+  type: bare1
   user: deploy
   dtnode: "dtnode-sample"
   password: deploy@1298
-  cpu: "2"
-  memory: "1"
+  cpu: 2
+  memory: 1
   disk: "100"
 

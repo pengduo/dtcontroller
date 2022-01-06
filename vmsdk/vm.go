@@ -16,6 +16,8 @@ import (
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 	"golang.org/x/net/context"
+
+	logrus "github.com/sirupsen/logrus"
 )
 
 //虚拟机操作
@@ -56,29 +58,22 @@ func GetVms(ctx context.Context, client *vim25.Client) []mo.VirtualMachine {
 }
 
 // 获取虚拟机信息
-func GetVmInfo(ctx context.Context, c *vim25.Client, vmName string, vvm mo.VirtualMachine) {
+func GetVmInfo(ctx context.Context, c *vim25.Client, vm *mo.VirtualMachine) error {
 	m := view.NewManager(c)
-	v, err := m.CreateContainerView(ctx, c.ServiceContent.RootFolder,
+	v, _ := m.CreateContainerView(ctx, c.ServiceContent.RootFolder,
 		[]string{"VirtualMachine"}, true)
-	if err != nil {
-		panic(err)
-	}
 
 	defer v.Destroy(ctx)
-	var vms []mo.VirtualMachine
-	err = v.Retrieve(ctx, []string{"VirtualMachine"},
-		[]string{"summary"}, &vms)
-	if err != nil {
-		panic(err)
-	}
 
-	for _, vm := range vms {
-		// 判断虚拟机名称是否相同，相同的话，vm 就是查找到主机
-		if vm.Summary.Config.Name == vmName {
-			fmt.Printf("%s: %s\n", vm.Summary.Config.Name, vm.Summary.Config.GuestFullName)
-			vvm = vm
-		}
+	err := v.RetrieveWithFilter(ctx, []string{"VirtualMachine"}, []string{"summary"},
+		&vm, property.Filter{
+			"name": vm.Name,
+		})
+	if err != nil {
+		logrus.Info("虚拟机不存在")
+		return err
 	}
+	return nil
 }
 
 // 使用OVF模版部署虚拟机
@@ -103,13 +98,13 @@ func DeployFromOVF(ctx context.Context, c *govmomi.Client,
 
 	ref, err := vcenter.NewManager(rc).DeployLibraryItem(ctx, item.ID, deploy)
 	if err != nil {
-		log.Panicln(err.Error())
+		logrus.Panicln(err.Error())
 	}
 
 	f := find.NewFinder(c.Client)
 	obj, err := f.ObjectReference(ctx, *ref)
 	if err != nil {
-		log.Println(err.Error())
+		logrus.Println(err.Error())
 	}
 
 	vm := obj.(*object.VirtualMachine)
@@ -213,7 +208,7 @@ func NewVirtualMachine(c *vim25.Client, vmName string,
 	m := view.NewManager(c)
 	v, err := m.CreateContainerView(ctx, c.ServiceContent.RootFolder, nil, true)
 	if err != nil {
-		log.Println(err)
+		logrus.Info(err)
 		return mo.VirtualMachine{}, err
 	}
 	defer v.Destroy(ctx)
@@ -224,7 +219,7 @@ func NewVirtualMachine(c *vim25.Client, vmName string,
 			"name": ds,
 		})
 	if err != nil {
-		log.Println(err)
+		logrus.Info(err)
 		return mo.VirtualMachine{}, err
 	}
 	//检查虚拟机名称重复
@@ -234,7 +229,7 @@ func NewVirtualMachine(c *vim25.Client, vmName string,
 			"name": vmName,
 		})
 	if err == nil {
-		log.Println("虚拟机已经存在:", vmName)
+		logrus.Info("虚拟机已经存在:", vmName)
 		return mo.VirtualMachine{}, err
 	}
 	//开始新建虚拟机
@@ -252,13 +247,13 @@ func NewVirtualMachine(c *vim25.Client, vmName string,
 	finder := find.NewFinder(c)
 	dc, err := finder.DefaultDatacenter(ctx)
 	if err != nil {
-		log.Println(err)
+		logrus.Info(err)
 		return mo.VirtualMachine{}, err
 	}
 	finder.SetDatacenter(dc)
 	folders, err := dc.Folders(ctx)
 	if err != nil {
-		log.Println(err)
+		logrus.Info(err)
 		return mo.VirtualMachine{}, err
 	}
 	//查找资源池
@@ -269,15 +264,15 @@ func NewVirtualMachine(c *vim25.Client, vmName string,
 	}
 	task, err := folders.VmFolder.CreateVM(ctx, vmSpec, pool, nil)
 	if err != nil {
-		log.Println(err)
+		logrus.Info(err)
 		return mo.VirtualMachine{}, err
 	}
 	info, err := task.WaitForResult(ctx)
 	if err != nil {
-		log.Println(err)
+		logrus.Info(err)
 		return mo.VirtualMachine{}, err
 	}
-	log.Println(info)
+	logrus.Info(info)
 
 	//检索虚拟机是否创建成功
 	vm = mo.VirtualMachine{}
@@ -286,7 +281,7 @@ func NewVirtualMachine(c *vim25.Client, vmName string,
 			"name": vmName,
 		})
 	if err != nil {
-		log.Println("虚拟机创建失败:", vmName)
+		logrus.Info("虚拟机创建失败:", vmName)
 		return mo.VirtualMachine{}, err
 	}
 	return vm, nil
@@ -310,12 +305,13 @@ func Mo2object(c *vim25.Client, mvm *mo.VirtualMachine) *object.VirtualMachine {
 }
 
 //删除虚拟机
-func VmDelete(ctx context.Context, vm *object.VirtualMachine) {
+func VmDelete(ctx context.Context, vm *object.VirtualMachine) error {
 	task, err := vm.Destroy(ctx)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	if task.Wait(ctx) != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
