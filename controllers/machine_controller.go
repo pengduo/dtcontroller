@@ -12,6 +12,7 @@ import (
 	"k8s.io/cri-api/pkg/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -41,9 +42,10 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	machine := &appsv1.Machine{}
 	dtnode := &appsv1.DtNode{}
-	err := r.Client.Get(context.TODO(), req.NamespacedName, machine)
+	err := r.Client.Get(ctx, req.NamespacedName, machine)
 	if err != nil {
 		if errors.IsNotFound(err) {
+			logrus.Info("找不到资源")
 			return reconcile.Result{}, client.IgnoreNotFound(err)
 		}
 		return reconcile.Result{}, err
@@ -56,19 +58,30 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
-	// 预删除
-	if !machine.DeletionTimestamp.IsZero() {
-		return ctrl.Result{}, r.machineFinalizer(ctx, machine, dtnode)
-	}
-	// 删除时间戳为空，则不需要删除，加入到资源中
-	if !containsString(machine.Finalizers, machineFinalizer) {
-		machine.Finalizers = append(machine.Finalizers, machineFinalizer)
-		if err := r.Client.Update(ctx, machine); err != nil {
-			return ctrl.Result{}, err
+	// 预删除逻辑
+	if machine.ObjectMeta.DeletionTimestamp.IsZero() {
+		if !controllerutil.ContainsFinalizer(machine, machineFinalizer) {
+			controllerutil.AddFinalizer(machine, machineFinalizer)
+			if err := r.Update(ctx, machine); err != nil {
+				return ctrl.Result{}, err
+			}
 		}
+	} else {
+		if controllerutil.ContainsFinalizer(machine, machineFinalizer) {
+			if err := r.machineFinalizer(ctx, machine, dtnode); err != nil {
+				return ctrl.Result{}, err
+			}
+
+			controllerutil.RemoveFinalizer(machine, machineFinalizer)
+			if err := r.Update(ctx, machine); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+
+		return ctrl.Result{}, nil
 	}
 
-	err = AssignMachine(machine, *dtnode)
+	err = AssignMachine(ctx, machine, *dtnode)
 	if err != nil {
 		log.Info("部署出错了")
 		return ctrl.Result{}, nil
@@ -79,19 +92,17 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 // 删除逻辑
 func (r *MachineReconciler) machineFinalizer(ctx context.Context, machine *appsv1.Machine, dtnode *appsv1.DtNode) error {
-	err := destoryMachine(machine, dtnode)
+	err := destoryMachine(ctx, machine, dtnode)
 	if err != nil {
 		logrus.Info("删除虚拟机失败")
 		return err
 	}
-	machine.Finalizers = removeString(machine.Finalizers, machineFinalizer)
-	return r.Client.Update(ctx, machine)
+	return nil
 }
 
 //从vcenter删除虚拟机
-func destoryMachine(machine *appsv1.Machine, dtnode *appsv1.DtNode) error {
+func destoryMachine(ctx context.Context, machine *appsv1.Machine, dtnode *appsv1.DtNode) error {
 	logrus.Info("开始删除机器实例")
-	ctx := context.Background()
 	vURL := strings.Join([]string{"https://", dtnode.Spec.User, ":",
 		dtnode.Spec.Password, "@", dtnode.Spec.Ip, "/sdk"}, "")
 	c, err := vmsdk.Vmclient(ctx, vURL, dtnode.Spec.User, dtnode.Spec.Password)
@@ -113,7 +124,7 @@ func destoryMachine(machine *appsv1.Machine, dtnode *appsv1.DtNode) error {
 			"name": machine.Name,
 		})
 	if err != nil {
-		logrus.Info("无法找到目标虚拟机，执行删除操作")
+		logrus.Info("无法找到目标虚拟机，结束删除操作")
 		return nil
 	}
 	var objectVm = *vmsdk.Mo2object(c.Client, &vm)
@@ -127,9 +138,8 @@ func destoryMachine(machine *appsv1.Machine, dtnode *appsv1.DtNode) error {
 }
 
 // 分配Machine资源处理方法
-func AssignMachine(machine *appsv1.Machine, dtnode appsv1.DtNode) error {
+func AssignMachine(ctx context.Context, machine *appsv1.Machine, dtnode appsv1.DtNode) error {
 	logrus.Info("创建machine")
-	ctx := context.Background()
 	vURL := strings.Join([]string{"https://", dtnode.Spec.User, ":",
 		dtnode.Spec.Password, "@", dtnode.Spec.Ip, "/sdk"}, "")
 	vmClient, err := vmsdk.Vmclient(ctx, vURL, dtnode.Spec.User, dtnode.Spec.Password)
