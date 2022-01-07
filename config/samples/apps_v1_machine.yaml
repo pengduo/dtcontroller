@@ -3,11 +3,11 @@ kind: Machine
 metadata:
   name: machine-sample
 spec:
-  type: bare1
+  type: bare
   user: deploy
   dtnode: "dtnode-sample"
   password: deploy@1298
   cpu: 2
-  memory: 1
+  memory: 256
   disk: "100"
 

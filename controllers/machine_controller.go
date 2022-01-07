@@ -7,6 +7,7 @@ import (
 	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/view"
 	"github.com/vmware/govmomi/vim25/mo"
+	"github.com/vmware/govmomi/vim25/types"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/cri-api/pkg/errors"
@@ -81,7 +82,7 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
-	err = AssignMachine(ctx, machine, *dtnode)
+	err = assignMachine(ctx, machine, *dtnode)
 	if err != nil {
 		log.Info("部署出错了")
 		return ctrl.Result{}, nil
@@ -138,7 +139,7 @@ func destoryMachine(ctx context.Context, machine *appsv1.Machine, dtnode *appsv1
 }
 
 // 分配Machine资源处理方法
-func AssignMachine(ctx context.Context, machine *appsv1.Machine, dtnode appsv1.DtNode) error {
+func assignMachine(ctx context.Context, machine *appsv1.Machine, dtnode appsv1.DtNode) error {
 	logrus.Info("创建machine")
 	vURL := strings.Join([]string{"https://", dtnode.Spec.User, ":",
 		dtnode.Spec.Password, "@", dtnode.Spec.Ip, "/sdk"}, "")
@@ -161,7 +162,9 @@ func AssignMachine(ctx context.Context, machine *appsv1.Machine, dtnode appsv1.D
 		})
 	if err == nil {
 		logrus.Info("已经存在该名称的虚拟机")
-		return util.NewError("已经存在该名称的虚拟机")
+		machine.Status.Phase = "ready"
+		machine.Status.Ip = vm.Summary.Guest.IpAddress
+		return nil
 	}
 	// 2. 判断部署类型
 	switch machine.Spec.Type {
@@ -169,13 +172,15 @@ func AssignMachine(ctx context.Context, machine *appsv1.Machine, dtnode appsv1.D
 		if machine.Status.Phase == "ready" {
 			break
 		}
-		vmhost, err := vmsdk.DeployFromBare(context.Background(),
-			vmClient.Client, machine.Name, "Datacenter", "Resources", "[datastore1]")
+		vm, err := vmsdk.NewVirtualMachine(vmClient.Client, machine.Name, "bigdata", machine.Spec.Cpu, machine.Spec.Memory, string(types.VirtualMachineGuestOsIdentifierCentos7_64Guest))
 		if err != nil {
 			logrus.Info("部署失败")
+			logrus.Error(err)
 			machine.Status.Phase = "failed"
 		} else {
-			logrus.Info("部署机器成功", vmhost)
+			logrus.Info("部署机器成功", vm.Summary.Config.Name)
+			machine.Status.Phase = "ready"
+			machine.Status.Ip = vm.Summary.Guest.IpAddress
 		}
 	case "clone":
 		if machine.Status.Phase == "ready" {

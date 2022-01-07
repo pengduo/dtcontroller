@@ -34,7 +34,10 @@ spec:
       type: string
     - jsonPath: .spec.cpu
       name: Cpu
-      type: string
+      type: integer
+    - jsonPath: .spec.cpu
+      name: Memory
+      type: integer
     - jsonPath: .spec.dtnode
       name: DtNode
       type: string

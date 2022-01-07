@@ -41,7 +41,8 @@ type MachineStatus struct {
 // +kubebuilder:printcolumn:name="Ip",type=string,JSONPath=`.spec.ip`
 // +kubebuilder:printcolumn:name="Mac",type=string,JSONPath=`.spec.mac`
 // +kubebuilder:printcolumn:name="User",type=string,JSONPath=`.spec.user`
-// +kubebuilder:printcolumn:name="Cpu",type=string,JSONPath=`.spec.cpu`
+// +kubebuilder:printcolumn:name="Cpu",type=integer,JSONPath=`.spec.cpu`
+// +kubebuilder:printcolumn:name="Memory",type=integer,JSONPath=`.spec.cpu`
 // +kubebuilder:printcolumn:name="DtNode",type=string,JSONPath=`.spec.dtnode`
 // +kubebuilder:printcolumn:name="type",type=string,JSONPath=`.spec.type`
 //+kubebuilder:object:root=true
