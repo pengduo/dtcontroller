@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"strconv"
 	"strings"
 
 	"github.com/vmware/govmomi/property"
@@ -142,7 +143,7 @@ func assignMachine(ctx context.Context, machine *appsv1.Machine, dtnode appsv1.D
 		logrus.Info(err.Error())
 		return err
 	}
-	// 1. 检查是否已经存在
+	// 1. 检查是否存在
 	m := view.NewManager(vmClient.Client)
 	v, err := m.CreateContainerView(ctx, vmClient.Client.ServiceContent.RootFolder, nil, true)
 	if err != nil {
@@ -168,15 +169,22 @@ func assignMachine(ctx context.Context, machine *appsv1.Machine, dtnode appsv1.D
 		}
 		vm, err := vmsdk.NewVirtualMachine(vmClient.Client, machine.Name,
 			"bigdata", machine.Spec.Cpu, machine.Spec.Memory,
-			string(types.VirtualMachineGuestOsIdentifierCentos7_64Guest))
+			string(types.VirtualMachineGuestOsIdentifierCentos7_64Guest),
+		)
 		if err != nil {
 			logrus.Info("部署失败")
-			logrus.Error(err)
 			machine.Status.Phase = "failed"
+			machine.Status.CpuUsed = ""
+			machine.Status.DiskUsed = ""
+			machine.Status.HostName = ""
+			machine.Status.Mac = ""
 		} else {
 			logrus.Info("部署机器成功", vm.Summary.Config.Name)
 			machine.Status.Phase = "ready"
 			machine.Status.Ip = vm.Summary.Guest.IpAddress
+			machine.Status.CpuUsed = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxCpuUsage)), strconv.Itoa(int(machine.Spec.Cpu))}, "/")
+			machine.Status.DiskUsed = ""
+			machine.Status.HostName = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxMemoryUsage)), strconv.Itoa(int(machine.Spec.Memory))}, "/")
 		}
 	case "clone":
 		if machine.Status.Phase == "ready" {
