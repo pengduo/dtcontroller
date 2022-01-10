@@ -7,13 +7,12 @@ import (
 	"strings"
 	"time"
 
+	logrus "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/cri-api/pkg/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	appsv1 "dtcontroller/api/v1"
 	"dtcontroller/vmsdk"
@@ -35,14 +34,11 @@ func (dtnodeReconciler *DtNodeReconciler) Reconcile(ctx context.Context,
 	_ = log.FromContext(ctx)
 
 	dtnode := &appsv1.DtNode{}
-
-	err := dtnodeReconciler.Client.Get(context.TODO(), req.NamespacedName, dtnode)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return reconcile.Result{}, nil
-		}
-		return reconcile.Result{}, err
+	if err := dtnodeReconciler.Get(ctx, req.NamespacedName, dtnode); err != nil {
+		logrus.Info("找不到dtnode")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
+
 	ip := dtnode.Spec.Ip
 	username := dtnode.Spec.User
 	password := dtnode.Spec.Password

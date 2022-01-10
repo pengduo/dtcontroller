@@ -10,12 +10,10 @@ import (
 	"github.com/vmware/govmomi/vim25/types"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/cri-api/pkg/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	appsv1 "dtcontroller/api/v1"
 	"dtcontroller/util"
@@ -41,22 +39,17 @@ const machineFinalizer = "machine.finalizers.dtwave"
 func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 
-	machine := &appsv1.Machine{}
-	dtnode := &appsv1.DtNode{}
-	err := r.Client.Get(ctx, req.NamespacedName, machine)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			logrus.Info("找不到资源")
-			return reconcile.Result{}, client.IgnoreNotFound(err)
-		}
-		return reconcile.Result{}, err
+	var machine = &appsv1.Machine{}
+	var dtnode = &appsv1.DtNode{}
+	if err := r.Get(ctx, req.NamespacedName, machine); err != nil {
+		logrus.Info("找不到Machine")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	dtnodeName := machine.Spec.DtNode
-	err = r.Client.Get(ctx, client.ObjectKey{Name: dtnodeName}, dtnode)
-	if err != nil {
-		logrus.Info("dtNode可能不存在", err)
-		return ctrl.Result{}, nil
+	if err := r.Get(ctx, client.ObjectKey{Name: dtnodeName}, dtnode); err != nil {
+		logrus.Info("dtNode不存在", err)
+		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	// 预删除逻辑
@@ -68,6 +61,7 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			}
 		}
 	} else {
+		//删除逻辑
 		if controllerutil.ContainsFinalizer(machine, machineFinalizer) {
 			if err := r.machineFinalizer(ctx, machine, dtnode); err != nil {
 				return ctrl.Result{}, err
@@ -82,7 +76,7 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
-	err = assignMachine(ctx, machine, *dtnode)
+	err := assignMachine(ctx, machine, *dtnode)
 	if err != nil {
 		log.Info("部署出错了")
 		return ctrl.Result{}, nil
@@ -172,7 +166,9 @@ func assignMachine(ctx context.Context, machine *appsv1.Machine, dtnode appsv1.D
 		if machine.Status.Phase == "ready" {
 			break
 		}
-		vm, err := vmsdk.NewVirtualMachine(vmClient.Client, machine.Name, "bigdata", machine.Spec.Cpu, machine.Spec.Memory, string(types.VirtualMachineGuestOsIdentifierCentos7_64Guest))
+		vm, err := vmsdk.NewVirtualMachine(vmClient.Client, machine.Name,
+			"bigdata", machine.Spec.Cpu, machine.Spec.Memory,
+			string(types.VirtualMachineGuestOsIdentifierCentos7_64Guest))
 		if err != nil {
 			logrus.Info("部署失败")
 			logrus.Error(err)
@@ -205,25 +201,6 @@ func assignMachine(ctx context.Context, machine *appsv1.Machine, dtnode appsv1.D
 		return err
 	}
 	return nil
-}
-
-func removeString(slice []string, s string) (result []string) {
-	for _, item := range slice {
-		if item == s {
-			continue
-		}
-		result = append(result, item)
-	}
-	return
-}
-
-func containsString(slice []string, s string) bool {
-	for _, item := range slice {
-		if item == s {
-			return true
-		}
-	}
-	return false
 }
 
 // 注册控制器
