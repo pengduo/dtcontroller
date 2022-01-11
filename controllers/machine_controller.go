@@ -164,6 +164,7 @@ func assignMachine(ctx context.Context, machine *appsv1.Machine, dtnode appsv1.D
 	v, err := m.CreateContainerView(ctx, vmClient.Client.ServiceContent.RootFolder, nil, true)
 	if err != nil {
 		logrus.Info(err)
+		return err
 	}
 	defer v.Destroy(ctx)
 	var vm mo.VirtualMachine
@@ -196,27 +197,21 @@ func assignMachine(ctx context.Context, machine *appsv1.Machine, dtnode appsv1.D
 			machine.Status.DiskUsed = "unknown"
 			machine.Status.HostName = "unknown"
 			machine.Status.Mac = "unknown"
+			return err
 		} else {
 			logrus.Info("部署机器成功", vm.Summary.Config.Name)
-			machine.Status.Phase = "Ready"
-			machine.Status.Ip = vm.Summary.Guest.IpAddress
-			machine.Status.CpuUsed = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxCpuUsage)), strconv.Itoa(int(machine.Spec.Cpu))}, "/")
-			machine.Status.HostName = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxMemoryUsage)), strconv.Itoa(int(machine.Spec.Memory))}, "/")
 		}
 	case "clone":
 		if machine.Status.Phase == "Ready" {
 			break
 		}
-		vm, err := vmsdk.CloneVm(ctx, machine.Spec.Base, machine.Name, vmClient.Client)
+		_, err := vmsdk.CloneVm(ctx, machine.Spec.Base, machine.Name, vmClient.Client)
 		if err != nil {
 			logrus.Info("克隆失败", err)
 			machine.Status.Phase = "Failed"
 			return err
 		} else {
 			machine.Status.Phase = "Ready"
-			machine.Status.Ip = vm.Summary.Guest.IpAddress
-			machine.Status.CpuUsed = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxCpuUsage)), strconv.Itoa(int(machine.Spec.Cpu))}, "/")
-			machine.Status.HostName = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxMemoryUsage)), strconv.Itoa(int(machine.Spec.Memory))}, "/")
 			logrus.Info("克隆机器成功")
 		}
 	case "ovf":
@@ -231,6 +226,12 @@ func assignMachine(ctx context.Context, machine *appsv1.Machine, dtnode appsv1.D
 		logrus.Info("获取虚拟机信息出错", err)
 		return err
 	}
+
+	machine.Status.Phase = "Ready"
+	machine.Status.Ip = vm.Summary.Guest.IpAddress
+	machine.Status.CpuUsed = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxCpuUsage)), strconv.Itoa(int(machine.Spec.Cpu))}, "/")
+	machine.Status.HostName = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxMemoryUsage)), strconv.Itoa(int(machine.Spec.Memory))}, "/")
+
 	return nil
 }
 
