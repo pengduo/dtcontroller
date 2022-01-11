@@ -52,6 +52,10 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		logrus.Info("dtNode不存在", err)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
+	if dtnode.Status.Phase != "ready" {
+		logrus.Info("dtnode状态异常")
+		return ctrl.Result{}, nil
+	}
 
 	// 预删除逻辑
 	if machine.ObjectMeta.DeletionTimestamp.IsZero() {
@@ -87,7 +91,8 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 }
 
 // 删除逻辑
-func (r *MachineReconciler) machineFinalizer(ctx context.Context, machine *appsv1.Machine, dtnode *appsv1.DtNode) error {
+func (r *MachineReconciler) machineFinalizer(ctx context.Context,
+	machine *appsv1.Machine, dtnode *appsv1.DtNode) error {
 	err := destoryMachine(ctx, machine, dtnode)
 	if err != nil {
 		logrus.Info("删除虚拟机失败")
@@ -97,7 +102,8 @@ func (r *MachineReconciler) machineFinalizer(ctx context.Context, machine *appsv
 }
 
 //从vcenter删除虚拟机
-func destoryMachine(ctx context.Context, machine *appsv1.Machine, dtnode *appsv1.DtNode) error {
+func destoryMachine(ctx context.Context, machine *appsv1.Machine,
+	dtnode *appsv1.DtNode) error {
 	logrus.Info("开始删除机器实例")
 	vURL := strings.Join([]string{"https://", dtnode.Spec.User, ":",
 		dtnode.Spec.Password, "@", dtnode.Spec.Ip, "/sdk"}, "")
@@ -123,7 +129,15 @@ func destoryMachine(ctx context.Context, machine *appsv1.Machine, dtnode *appsv1
 		logrus.Info("无法找到目标虚拟机，结束删除操作")
 		return nil
 	}
+	//先关机
 	var objectVm = *vmsdk.Mo2object(c.Client, &vm)
+
+	_, err = objectVm.PowerOff(ctx)
+	if err != nil {
+		logrus.Info("关机出错了")
+		return err
+	}
+
 	err = vmsdk.VmDelete(ctx, &objectVm)
 	if err != nil {
 		logrus.Info("出错了", err.Error())
@@ -147,7 +161,7 @@ func assignMachine(ctx context.Context, machine *appsv1.Machine, dtnode appsv1.D
 	m := view.NewManager(vmClient.Client)
 	v, err := m.CreateContainerView(ctx, vmClient.Client.ServiceContent.RootFolder, nil, true)
 	if err != nil {
-		logrus.Info(err.Error())
+		logrus.Info(err)
 	}
 	defer v.Destroy(ctx)
 	var vm mo.VirtualMachine
@@ -159,6 +173,9 @@ func assignMachine(ctx context.Context, machine *appsv1.Machine, dtnode appsv1.D
 		logrus.Info("已经存在该名称的虚拟机")
 		machine.Status.Phase = "ready"
 		machine.Status.Ip = vm.Summary.Guest.IpAddress
+		machine.Status.CpuUsed = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxCpuUsage)), strconv.Itoa(int(machine.Spec.Cpu))}, "/")
+		machine.Status.DiskUsed = ""
+		machine.Status.HostName = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxMemoryUsage)), strconv.Itoa(int(machine.Spec.Memory))}, "/")
 		return nil
 	}
 	// 2. 判断部署类型
@@ -190,13 +207,17 @@ func assignMachine(ctx context.Context, machine *appsv1.Machine, dtnode appsv1.D
 		if machine.Status.Phase == "ready" {
 			break
 		}
-		_, err = vmsdk.CloneVm("test01", machine.Name, ctx, vmClient.Client, "Datacenter")
+		vm, err := vmsdk.CloneVm(ctx, "dtwave-centos-7a", machine.Name, vmClient.Client)
 		if err != nil {
-			logrus.Info("部署失败")
+			logrus.Info("克隆失败", err)
 			machine.Status.Phase = "failed"
 		} else {
 			machine.Status.Phase = "ready"
-			logrus.Info("部署机器成功")
+			machine.Status.Ip = vm.Summary.Guest.IpAddress
+			machine.Status.CpuUsed = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxCpuUsage)), strconv.Itoa(int(machine.Spec.Cpu))}, "/")
+			machine.Status.DiskUsed = ""
+			machine.Status.HostName = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxMemoryUsage)), strconv.Itoa(int(machine.Spec.Memory))}, "/")
+			logrus.Info("克隆机器成功")
 		}
 	default:
 		logrus.Info("不支持的部署方式")

@@ -32,14 +32,13 @@ func VmPowerOn(ctx context.Context, vm *object.VirtualMachine) {
 
 // 关机
 func VmShutdown(ctx context.Context, vm *object.VirtualMachine) {
-	// 第一个返回值是 task，我认为没必要处理，如果你要处理的话可以接收后处理
 	_, err := vm.PowerOff(ctx)
 	if err != nil {
 		panic(err)
 	}
 }
 
-// 获取虚拟机
+// 查找虚拟机
 func GetVms(ctx context.Context, client *vim25.Client) []mo.VirtualMachine {
 	m := view.NewManager(client)
 	v, err := m.CreateContainerView(ctx, client.ServiceContent.RootFolder,
@@ -62,9 +61,7 @@ func GetVmInfo(ctx context.Context, c *vim25.Client, vm *mo.VirtualMachine) erro
 	m := view.NewManager(c)
 	v, _ := m.CreateContainerView(ctx, c.ServiceContent.RootFolder,
 		[]string{"VirtualMachine"}, true)
-
 	defer v.Destroy(ctx)
-
 	err := v.RetrieveWithFilter(ctx, []string{"VirtualMachine"}, []string{"summary"},
 		&vm, property.Filter{
 			"name": vm.Name,
@@ -111,98 +108,69 @@ func DeployFromOVF(ctx context.Context, c *govmomi.Client,
 	return vm != nil
 }
 
-// 原生部署一个虚拟机
-func DeployFromBare(ctx context.Context, c *vim25.Client,
-	name string, datacenter string,
-	resourcepool string, datastore string) (Host, error) {
-	vmhost := Host{}
-
-	finder := find.NewFinder(c)
-	dc, err := finder.Datacenter(ctx, datacenter)
-	if err != nil {
-		return vmhost, err
-	}
-	finder.SetDatacenter(dc)
-	folders, err := dc.Folders(ctx)
-	if err != nil {
-		return vmhost, err
-	}
-	pool, err := finder.ResourcePool(ctx, resourcepool)
-	if err != nil {
-		return vmhost, err
-	}
-	spec := types.VirtualMachineConfigSpec{
-		Name:    name,
-		GuestId: string(types.VirtualMachineGuestOsIdentifierCentos7_64Guest),
-		Files: &types.VirtualMachineFileInfo{
-			VmPathName: datastore,
-		},
-		NumCPUs:           1,
-		MemoryMB:          256,
-		NpivOnNonRdmDisks: types.NewBool(true),
-	}
-	task, err := folders.VmFolder.CreateVM(ctx, spec, pool, nil)
-	if err != nil {
-		return vmhost, err
-	}
-	info, err := task.WaitForResult(ctx)
-	if err != nil {
-		return vmhost, err
-	}
-	vm := object.NewVirtualMachine(c, info.Result.(types.ManagedObjectReference))
-	_, err = vm.ObjectName(ctx)
-	if err != nil {
-		return vmhost, err
-	}
-	return vmhost, nil
-}
-
 // 克隆虚拟机
-func CloneVm(exists string, new string, ctx context.Context, c *vim25.Client,
-	datacenter string) (string, error) {
-	var name string
+func CloneVm(ctx context.Context, exist string, new string,
+	c *vim25.Client) (mo.VirtualMachine, error) {
+
+	// 查找数据中心
 	finder := find.NewFinder(c)
-	dc, err := finder.Datacenter(ctx, datacenter)
+	dc, err := finder.DefaultDatacenter(ctx)
 	if err != nil {
-		return name, err
+		logrus.Info("查找数据中心出错", err)
+		return mo.VirtualMachine{}, err
 	}
-
 	finder.SetDatacenter(dc)
-
-	vm, err := finder.VirtualMachine(ctx, exists)
-	if err != nil {
-		return name, err
-	}
-
 	folders, err := dc.Folders(ctx)
 	if err != nil {
-		return name, err
+		logrus.Info(err)
+		return mo.VirtualMachine{}, err
 	}
 
+	// 构建克隆参数
 	spec := types.VirtualMachineCloneSpec{
-		PowerOn: false,
+		PowerOn: true,
 	}
-
-	task, err := vm.Clone(ctx, folders.VmFolder, new, spec)
+	// 检查被克隆的存在
+	ovjectVm, err := finder.VirtualMachine(ctx, exist)
 	if err != nil {
-		return name, err
+		logrus.Info("克隆对象不存在")
+		return mo.VirtualMachine{}, err
 	}
-
+	// 克隆操作
+	task, err := ovjectVm.Clone(ctx, folders.VmFolder, new, spec)
+	if err != nil {
+		logrus.Info("克隆失败", err)
+		return mo.VirtualMachine{}, err
+	}
+	// 等待
 	info, err := task.WaitForResult(ctx)
 	if err != nil {
-		return name, err
+		logrus.Info("等待超时", err)
+		return mo.VirtualMachine{}, err
 	}
-
+	// 查找虚拟机
 	clone := object.NewVirtualMachine(c, info.Result.(types.ManagedObjectReference))
-	name, err = clone.ObjectName(ctx)
+	name, err := clone.ObjectName(ctx)
 	if err != nil {
-		return name, err
+		return mo.VirtualMachine{}, err
 	}
 
-	return name, nil
+	ovjectVm, err = finder.VirtualMachine(ctx, name)
+	if err != nil {
+		logrus.Info("克隆失败", err)
+		return mo.VirtualMachine{}, err
+	}
+	var vm *mo.VirtualMachine
+
+	vm, err = Object2Mo(ctx, ovjectVm, c)
+	if err != nil {
+		logrus.Info("转换出错", err)
+		return mo.VirtualMachine{}, err
+	}
+	return *vm, nil
 }
 
-//原生创建虚拟机
+// 原生创建虚拟机
 func NewVirtualMachine(c *vim25.Client, vmName string,
 	ds string, cpu int32, memory int64, guestId string) (mo.VirtualMachine, error) {
 	m := view.NewManager(c)
@@ -212,7 +180,7 @@ func NewVirtualMachine(c *vim25.Client, vmName string,
 		return mo.VirtualMachine{}, err
 	}
 	defer v.Destroy(ctx)
-	//检查ds是否存在
+	// 检查ds是否存在
 	var datastore mo.Datastore
 	err = v.RetrieveWithFilter(ctx, []string{"Datastore"}, []string{"summary"},
 		&datastore, property.Filter{
@@ -222,7 +190,7 @@ func NewVirtualMachine(c *vim25.Client, vmName string,
 		logrus.Info(err)
 		return mo.VirtualMachine{}, err
 	}
-	//检查虚拟机名称重复
+	// 检查虚拟机名称重复
 	var vm mo.VirtualMachine
 	err = v.RetrieveWithFilter(ctx, []string{"VirtualMachine"}, []string{"summary"},
 		&vm, property.Filter{
@@ -232,7 +200,7 @@ func NewVirtualMachine(c *vim25.Client, vmName string,
 		logrus.Info("虚拟机已经存在:", vmName)
 		return mo.VirtualMachine{}, err
 	}
-	//开始新建虚拟机
+	// 开始新建虚拟机
 	vmSpec := types.VirtualMachineConfigSpec{
 		Name:    vmName,
 		GuestId: guestId,
@@ -243,7 +211,7 @@ func NewVirtualMachine(c *vim25.Client, vmName string,
 		MemoryMB:          memory,
 		NpivOnNonRdmDisks: types.NewBool(true),
 	}
-	//查找数据中心
+	// 查找数据中心
 	finder := find.NewFinder(c)
 	dc, err := finder.DefaultDatacenter(ctx)
 	if err != nil {
@@ -256,7 +224,7 @@ func NewVirtualMachine(c *vim25.Client, vmName string,
 		logrus.Info(err)
 		return mo.VirtualMachine{}, err
 	}
-	//查找资源池
+	// 查找资源池
 	pool, err := finder.ResourcePool(ctx, "Resources")
 	if err != nil {
 		log.Panicln(err)
@@ -274,7 +242,7 @@ func NewVirtualMachine(c *vim25.Client, vmName string,
 	}
 	logrus.Info(info)
 
-	//检索虚拟机是否创建成功
+	// 检索虚拟机是否创建成功
 	vm = mo.VirtualMachine{}
 	err = v.RetrieveWithFilter(ctx, []string{"VirtualMachine"}, []string{"summary"},
 		&vm, property.Filter{
@@ -302,6 +270,17 @@ func CleanOrphaned(ctx context.Context, c *vim25.Client, vms *[]mo.VirtualMachin
 func Mo2object(c *vim25.Client, mvm *mo.VirtualMachine) *object.VirtualMachine {
 	vm := object.NewVirtualMachine(c, mvm.Reference())
 	return vm
+}
+
+//object类型转mo
+func Object2Mo(ctx context.Context, vm *object.VirtualMachine, c *vim25.Client) (*mo.VirtualMachine, error) {
+	var mvm mo.VirtualMachine
+	pc := property.DefaultCollector(c)
+	err := pc.RetrieveOne(ctx, vm.Reference(), []string{"runtime.host", "config.uuid"}, &mvm)
+	if err != nil {
+		return nil, err
+	}
+	return &mvm, err
 }
 
 //删除虚拟机

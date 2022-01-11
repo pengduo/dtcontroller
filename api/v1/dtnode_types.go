@@ -32,6 +32,9 @@ type DtNodeSpec struct {
 	Ip       string `json:"ip,omitempty"`
 	User     string `json:"user,omitempty"`
 	Password string `json:"password,omitempty"`
+
+	Datacenter string `json:"datacenter,omitempty"`
+	Datastore  string `json:"datastore,omitempty"`
 }
 
 // 状态信息
@@ -52,14 +55,14 @@ type DtNodeStatus struct {
 }
 
 //+kubebuilder:printcolumn:name="Provider",type=string,JSONPath=`.spec.provider`
+//+kubebuilder:printcolumn:name="Datacenter",type=string,JSONPath=`.spec.datacenter`
+//+kubebuilder:printcolumn:name="Datastore",type=string,JSONPath=`.spec.datastore`
 //+kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
 //+kubebuilder:printcolumn:name="Version",type=string,JSONPath=`.status.version`
 //+kubebuilder:printcolumn:name="Cpu",type=string,JSONPath=`.status.cpu`
 //+kubebuilder:printcolumn:name="Memory",type=string,JSONPath=`.status.memory`
 //+kubebuilder:printcolumn:name="Storage",type=string,JSONPath=`.status.storage`
 //+kubebuilder:printcolumn:name="Vms",type=integer,JSONPath=`.status.vms`
-//+kubebuilder:printcolumn:name="Hosts",type=integer,JSONPath=`.status.hosts`
-//+kubebuilder:printcolumn:name="Networks",type=integer,JSONPath=`.status.networks`
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //+kubebuilder:resource:scope=Cluster

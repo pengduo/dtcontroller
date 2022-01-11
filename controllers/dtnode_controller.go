@@ -62,8 +62,13 @@ func (dtnodeReconciler *DtNodeReconciler) Reconcile(ctx context.Context,
 	age := currentTime.Local().UTC().Sub(createTime.Time)
 	dtnode.Status.Age = strconv.FormatFloat(age.Hours(), 'f', 2, 64)
 
-	vmsdk.GetDtNodeInfo(ctx, vmclient.Client, dtnode)
-
+	err = vmsdk.GetDtNodeInfo(ctx, vmclient.Client, dtnode)
+	if err != nil {
+		logrus.Info("Dtnode注册失败", err)
+		dtnode.Status.Phase = "failed"
+		dtnodeReconciler.Status().Update(ctx, dtnode)
+		return ctrl.Result{}, nil
+	}
 	vms := vmsdk.GetVms(ctx, vmclient.Client)
 	dtnode.Status.Vms = len(vms)
 

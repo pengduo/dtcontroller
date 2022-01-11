@@ -6,6 +6,8 @@ import (
 
 	appsv1 "dtcontroller/api/v1"
 
+	"github.com/sirupsen/logrus"
+	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/view"
 	"github.com/vmware/govmomi/vim25"
 	"github.com/vmware/govmomi/vim25/mo"
@@ -93,19 +95,31 @@ func GetVmHosts(ctx context.Context, client *vim25.Client, vmshosts *Hosts) {
 }
 
 //回填DtNode信息
-func GetDtNodeInfo(ctx context.Context, client *vim25.Client, dtNode *appsv1.DtNode) {
+func GetDtNodeInfo(ctx context.Context, client *vim25.Client, dtNode *appsv1.DtNode) error {
 	m := view.NewManager(client)
 	v, err := m.CreateContainerView(ctx, client.ServiceContent.RootFolder,
-		[]string{"HostSystem"}, true)
+		nil, true)
 	if err != nil {
-		panic(err)
+		logrus.Info(err)
 	}
 	defer v.Destroy(ctx)
 	var hss []mo.HostSystem
 	err = v.Retrieve(ctx, []string{"HostSystem"},
 		[]string{"summary"}, &hss)
 	if err != nil {
-		panic(err)
+		logrus.Info("主机不存在", err)
+		return err
+	}
+
+	//检查ds
+	var datastore mo.Datastore
+	err = v.RetrieveWithFilter(ctx, []string{"Datastore"}, []string{"summary"}, &datastore, property.Filter{
+		"name": dtNode.Spec.Datastore,
+	})
+
+	if err != nil {
+		logrus.Info("存储库不存在", dtNode.Spec.Datastore)
+		return err
 	}
 	var cpuUsage int32
 	var cpuAll int32
@@ -125,4 +139,5 @@ func GetDtNodeInfo(ctx context.Context, client *vim25.Client, dtNode *appsv1.DtN
 	dtNode.Status.Cpu = strings.Join([]string{strconv.Itoa(int(cpuUsage)), "/", strconv.Itoa(int(cpuAll))}, "")
 	dtNode.Status.Memory = strings.Join([]string{strconv.Itoa(int(memoryUsage)), "/", strconv.Itoa(int(memoryAll))}, "")
 	dtNode.Status.Hosts = len(hss)
+	return nil
 }

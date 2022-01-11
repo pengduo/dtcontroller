@@ -20,6 +20,12 @@ spec:
     - jsonPath: .spec.provider
       name: Provider
       type: string
+    - jsonPath: .spec.datacenter
+      name: Datacenter
+      type: string
+    - jsonPath: .spec.datastore
+      name: Datastore
+      type: string
     - jsonPath: .status.phase
       name: Phase
       type: string
@@ -37,12 +43,6 @@ spec:
       type: string
     - jsonPath: .status.vms
       name: Vms
-      type: integer
-    - jsonPath: .status.hosts
-      name: Hosts
-      type: integer
-    - jsonPath: .status.networks
-      name: Networks
       type: integer
     name: v1
     schema:
@@ -64,6 +64,10 @@ spec:
           spec:
             description: DtNode结构体 DtNodeSpec defines the desired state of DtNode
             properties:
+              datacenter:
+                type: string
+              datastore:
+                type: string
               ip:
                 type: string
               password:

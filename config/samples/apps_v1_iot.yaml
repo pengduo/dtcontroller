@@ -1,7 +1,0 @@
-apiVersion: apps.dtwave.com/v1
-kind: Iot
-metadata:
-  name: iot-sample
-spec:
-  # Add fields here
-  foo: bar

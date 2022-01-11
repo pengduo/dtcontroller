@@ -7,3 +7,5 @@ spec:
   ip: "192.168.123.138"
   user: "linjb@vsphere.local"
   password: "LIN115jinbao!"
+  datacenter: "sss"
+  datastore: "bigdata"
