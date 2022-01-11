@@ -20,7 +20,7 @@ spec:
     - jsonPath: .status.phase
       name: Phase
       type: string
-    - jsonPath: .spec.ip
+    - jsonPath: .status.ip
       name: Ip
       type: string
     - jsonPath: .spec.dtnode
@@ -49,6 +49,8 @@ spec:
           spec:
             description: Machine结构体 MachineSpec defines the desired state of Machine
             properties:
+              base:
+                type: string
               cpu:
                 format: int32
                 type: integer
@@ -59,6 +61,8 @@ spec:
               memory:
                 format: int64
                 type: integer
+              os:
+                type: string
               password:
                 type: string
               type:

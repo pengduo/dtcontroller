@@ -38,7 +38,7 @@ const machineFinalizer = "machine.finalizers.dtwave"
 //+kubebuilder:rbac:groups=apps.dtwave.com,resources=machines/finalizers,verbs=update
 
 func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
+	_ = log.FromContext(ctx)
 
 	var machine = &appsv1.Machine{}
 	var dtnode = &appsv1.DtNode{}
@@ -52,8 +52,10 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		logrus.Info("dtNode不存在", err)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-	if dtnode.Status.Phase != "ready" {
+	if dtnode.Status.Phase != "Ready" {
 		logrus.Info("dtnode状态异常")
+		machine.Status.Phase = "Failed"
+		r.Status().Update(ctx, machine)
 		return ctrl.Result{}, nil
 	}
 
@@ -83,8 +85,8 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	err := assignMachine(ctx, machine, *dtnode)
 	if err != nil {
-		log.Info("部署出错了")
-		return ctrl.Result{}, nil
+		logrus.Info("部署出错了")
+		machine.Status.Phase = "Failed"
 	}
 	r.Status().Update(ctx, machine)
 	return ctrl.Result{}, nil
@@ -174,51 +176,51 @@ func assignMachine(ctx context.Context, machine *appsv1.Machine, dtnode appsv1.D
 		machine.Status.Phase = "ready"
 		machine.Status.Ip = vm.Summary.Guest.IpAddress
 		machine.Status.CpuUsed = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxCpuUsage)), strconv.Itoa(int(machine.Spec.Cpu))}, "/")
-		machine.Status.DiskUsed = ""
 		machine.Status.HostName = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxMemoryUsage)), strconv.Itoa(int(machine.Spec.Memory))}, "/")
 		return nil
 	}
 	// 2. 判断部署类型
 	switch machine.Spec.Type {
 	case "bare":
-		if machine.Status.Phase == "ready" {
+		if machine.Status.Phase == "Ready" {
 			break
 		}
 		vm, err := vmsdk.NewVirtualMachine(vmClient.Client, machine.Name,
-			"bigdata", machine.Spec.Cpu, machine.Spec.Memory,
+			dtnode.Spec.Datastore, machine.Spec.Cpu, machine.Spec.Memory,
 			string(types.VirtualMachineGuestOsIdentifierCentos7_64Guest),
 		)
 		if err != nil {
 			logrus.Info("部署失败")
-			machine.Status.Phase = "failed"
-			machine.Status.CpuUsed = ""
-			machine.Status.DiskUsed = ""
-			machine.Status.HostName = ""
-			machine.Status.Mac = ""
+			machine.Status.Phase = "Failed"
+			machine.Status.CpuUsed = "unknown"
+			machine.Status.DiskUsed = "unknown"
+			machine.Status.HostName = "unknown"
+			machine.Status.Mac = "unknown"
 		} else {
 			logrus.Info("部署机器成功", vm.Summary.Config.Name)
-			machine.Status.Phase = "ready"
+			machine.Status.Phase = "Ready"
 			machine.Status.Ip = vm.Summary.Guest.IpAddress
 			machine.Status.CpuUsed = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxCpuUsage)), strconv.Itoa(int(machine.Spec.Cpu))}, "/")
-			machine.Status.DiskUsed = ""
 			machine.Status.HostName = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxMemoryUsage)), strconv.Itoa(int(machine.Spec.Memory))}, "/")
 		}
 	case "clone":
-		if machine.Status.Phase == "ready" {
+		if machine.Status.Phase == "Ready" {
 			break
 		}
-		vm, err := vmsdk.CloneVm(ctx, "dtwave-centos-7a", machine.Name, vmClient.Client)
+		vm, err := vmsdk.CloneVm(ctx, machine.Spec.Base, machine.Name, vmClient.Client)
 		if err != nil {
 			logrus.Info("克隆失败", err)
-			machine.Status.Phase = "failed"
+			machine.Status.Phase = "Failed"
+			return err
 		} else {
-			machine.Status.Phase = "ready"
+			machine.Status.Phase = "Ready"
 			machine.Status.Ip = vm.Summary.Guest.IpAddress
 			machine.Status.CpuUsed = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxCpuUsage)), strconv.Itoa(int(machine.Spec.Cpu))}, "/")
-			machine.Status.DiskUsed = ""
 			machine.Status.HostName = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxMemoryUsage)), strconv.Itoa(int(machine.Spec.Memory))}, "/")
 			logrus.Info("克隆机器成功")
 		}
+	case "ovf":
+		break
 	default:
 		logrus.Info("不支持的部署方式")
 		return util.NewError("不支持的部署方式")

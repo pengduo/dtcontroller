@@ -65,7 +65,7 @@ func (dtnodeReconciler *DtNodeReconciler) Reconcile(ctx context.Context,
 	err = vmsdk.GetDtNodeInfo(ctx, vmclient.Client, dtnode)
 	if err != nil {
 		logrus.Info("Dtnode注册失败", err)
-		dtnode.Status.Phase = "failed"
+		dtnode.Status.Phase = "Failed"
 		dtnodeReconciler.Status().Update(ctx, dtnode)
 		return ctrl.Result{}, nil
 	}

@@ -20,6 +20,8 @@ type MachineSpec struct {
 	Cpu      int32  `json:"cpu,omitempty"`
 	Memory   int64  `json:"memory,omitempty"`
 	Disk     string `json:"disk,omitempty"`
+	Base     string `json:"base,omitempty"`
+	Os       string `json:"os,omitempty"`
 }
 
 // 状态信息
@@ -37,7 +39,7 @@ type MachineStatus struct {
 }
 
 // +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
-// +kubebuilder:printcolumn:name="Ip",type=string,JSONPath=`.spec.ip`
+// +kubebuilder:printcolumn:name="Ip",type=string,JSONPath=`.status.ip`
 // +kubebuilder:printcolumn:name="DtNode",type=string,JSONPath=`.spec.dtnode`
 // +kubebuilder:printcolumn:name="type",type=string,JSONPath=`.spec.type`
 //+kubebuilder:object:root=true

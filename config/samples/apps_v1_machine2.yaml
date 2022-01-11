@@ -10,4 +10,6 @@ spec:
   cpu: 1
   memory: 512
   disk: "100"
+  base: "dtwave-centos-7a"
+  os: "sdad"
 
