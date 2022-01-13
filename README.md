@@ -18,7 +18,7 @@ dtcontroller是一系列控制器的整合
 
 ## 使用文档
 
-1. 部署DtNode
+### 部署DtNode
 
 新建文件 `dtnode-sample.yaml`
 ```yaml
@@ -41,7 +41,7 @@ kubectl apply -f dtnode-sample.yaml
 
 以上完成了Dtnode的部署，Dtnode作为vmware的抽象，必须先于Machine部署
 
-2. 部署Machine
+### 部署Machine
 
 新建文件`machine-sample.yaml`
 ```yaml 
@@ -78,5 +78,4 @@ kubectl apply -f machine-sample.yaml
 
 ## MachineGroup文档
 [MachineGroup](docs/MachineGroup.md)
-
 
