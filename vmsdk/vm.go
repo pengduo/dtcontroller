@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/property"
-	"github.com/vmware/govmomi/vapi/library"
 	"github.com/vmware/govmomi/vapi/rest"
 	"github.com/vmware/govmomi/vapi/vcenter"
 	"github.com/vmware/govmomi/view"
@@ -74,38 +72,61 @@ func GetVmInfo(ctx context.Context, c *vim25.Client, vm *mo.VirtualMachine) erro
 }
 
 // 使用OVF模版部署虚拟机
-func DeployFromOVF(ctx context.Context, c *govmomi.Client,
-	rc *rest.Client, item library.Item, name string, datastoreID string,
-	networkKey string, networkValue string, resourcePoolID string, folderID string) bool {
+func OVF(ctx context.Context, c *vim25.Client, rc *rest.Client,
+	name string, ds string, itemID string) error {
+	finder := find.NewFinder(c)
+	m := view.NewManager(c)
+	v, err := m.CreateContainerView(ctx, c.ServiceContent.RootFolder, nil, true)
+	defer v.Destroy(ctx)
+	if err != nil {
+		return err
+	}
+	// 检查虚拟机名称重复
+	var vm mo.VirtualMachine
+	err = v.RetrieveWithFilter(ctx, []string{"VirtualMachine"}, []string{"summary"},
+		&vm, property.Filter{
+			"name": name,
+		})
+	if err == nil {
+		logrus.Info("虚拟机已经存在:", name)
+		return err
+	}
+
+	pool, err := finder.ResourcePool(ctx, "Resources")
+	if err != nil {
+		logrus.Info("查找Resources", err)
+		return err
+	}
+
+	// 检查ds是否存在
+	var datastore mo.Datastore
+	err = v.RetrieveWithFilter(ctx, []string{"Datastore"}, []string{"summary"},
+		&datastore, property.Filter{
+			"name": ds,
+		})
+	if err != nil {
+		logrus.Info(err)
+		return err
+	}
+
 	deploy := vcenter.Deploy{
 		DeploymentSpec: vcenter.DeploymentSpec{
 			Name:               name,
-			DefaultDatastoreID: datastoreID,
+			DefaultDatastoreID: datastore.Reference().Value,
 			AcceptAllEULA:      true,
-			NetworkMappings: []vcenter.NetworkMapping{{
-				Key:   networkKey,
-				Value: networkValue,
-			}},
 		},
 		Target: vcenter.Target{
-			ResourcePoolID: resourcePoolID,
-			FolderID:       folderID,
+			ResourcePoolID: pool.Reference().Value,
 		},
 	}
 
-	ref, err := vcenter.NewManager(rc).DeployLibraryItem(ctx, item.ID, deploy)
+	_, err = vcenter.NewManager(rc).DeployLibraryItem(ctx, itemID, deploy)
 	if err != nil {
-		logrus.Panicln(err.Error())
+		logrus.Info(err.Error())
+		return err
 	}
 
-	f := find.NewFinder(c.Client)
-	obj, err := f.ObjectReference(ctx, *ref)
-	if err != nil {
-		logrus.Println(err.Error())
-	}
-
-	vm := obj.(*object.VirtualMachine)
-	return vm != nil
+	return nil
 }
 
 // 克隆虚拟机

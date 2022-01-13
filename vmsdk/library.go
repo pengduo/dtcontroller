@@ -9,7 +9,8 @@ import (
 )
 
 // 内容库操作
-func GetLibraryItem(ctx context.Context, rc *rest.Client, libraryName string, libraryItemType string, libraryItemName string) (*library.Item, error) {
+func GetLibraryItem(ctx context.Context, rc *rest.Client, libraryName string,
+	libraryItemType string, libraryItemName string) (*library.Item, error) {
 	// 需要通过 rc 来获得 library.Manager 对象
 	m := library.NewManager(rc)
 	// 通过内容库的名称来查找内容库

@@ -2,10 +2,12 @@ package controllers
 
 import (
 	"context"
+	"net/url"
 	"strconv"
 	"strings"
 
 	"github.com/vmware/govmomi/property"
+	"github.com/vmware/govmomi/vapi/rest"
 	"github.com/vmware/govmomi/view"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
@@ -215,7 +217,18 @@ func assignMachine(ctx context.Context, machine *appsv1.Machine, dtnode appsv1.D
 			logrus.Info("克隆机器成功")
 		}
 	case "ovf":
-		break
+		rc := rest.NewClient(vmClient.Client)
+		if err := rc.Login(ctx, url.UserPassword(dtnode.Spec.User, dtnode.Spec.Password)); err != nil {
+			logrus.Info("登录出错", err)
+			break
+		}
+		//获取内容库
+		item, err := vmsdk.GetLibraryItem(ctx, rc, "library1", "ovf", "centos7")
+		if err != nil {
+			logrus.Info("内容库获取出错", err)
+			return err
+		}
+		vmsdk.OVF(ctx, vmClient.Client, rc, machine.Name, dtnode.Spec.Datastore, item.ID)
 	default:
 		logrus.Info("不支持的部署方式")
 		return util.NewError("不支持的部署方式")

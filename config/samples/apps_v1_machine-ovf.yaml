@@ -1,0 +1,13 @@
+apiVersion: apps.dtwave.com/v1
+kind: Machine
+metadata:
+  name: machine-sample-ovf
+spec:
+  type: ovf
+  user: deploy
+  dtnode: "dtnode-sample"
+  password: deploy@1298
+  cpu: 2
+  memory: 256
+  disk: "100"
+
