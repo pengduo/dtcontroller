@@ -56,6 +56,9 @@ spec:
                 type: string
               password:
                 type: string
+              rs:
+                format: int32
+                type: integer
               type:
                 type: string
               user:
@@ -68,6 +71,8 @@ spec:
                 description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
                   of cluster Important: Run "make" to regenerate code after modifying
                   this file'
+                type: string
+              rs:
                 type: string
             type: object
         type: object
