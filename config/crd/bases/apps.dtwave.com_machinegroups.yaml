@@ -16,7 +16,11 @@ spec:
     singular: machinegroup
   scope: Namespaced
   versions:
-  - name: v1
+  - additionalPrinterColumns:
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    name: v1
     schema:
       openAPIV3Schema:
         description: MachineGroup is the Schema for the machinegroups API
@@ -36,13 +40,35 @@ spec:
           spec:
             description: MachineGroupSpec defines the desired state of MachineGroup
             properties:
-              foo:
-                description: Foo is an example field of MachineGroup. Edit machinegroup_types.go
-                  to remove/update
+              base:
+                type: string
+              cpu:
+                format: int32
+                type: integer
+              disk:
+                type: string
+              dtnode:
+                type: string
+              memory:
+                format: int64
+                type: integer
+              os:
+                type: string
+              password:
+                type: string
+              type:
+                type: string
+              user:
                 type: string
             type: object
           status:
             description: MachineGroupStatus defines the observed state of MachineGroup
+            properties:
+              phase:
+                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                  of cluster Important: Run "make" to regenerate code after modifying
+                  this file'
+                type: string
             type: object
         type: object
     served: true

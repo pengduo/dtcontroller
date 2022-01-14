@@ -28,16 +28,25 @@ type MachineGroupSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of MachineGroup. Edit machinegroup_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	DtNode   string `json:"dtnode,omitempty"`
+	Type     string `json:"type,omitempty"`
+	User     string `json:"user,omitempty"`
+	Password string `json:"password,omitempty"`
+	Cpu      int32  `json:"cpu,omitempty"`
+	Memory   int64  `json:"memory,omitempty"`
+	Disk     string `json:"disk,omitempty"`
+	Base     string `json:"base,omitempty"`
+	Os       string `json:"os,omitempty"`
 }
 
 // MachineGroupStatus defines the observed state of MachineGroup
 type MachineGroupStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	Phase string `json:"phase,omitempty"`
 }
 
+//+kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
