@@ -3,5 +3,11 @@ kind: MachineGroup
 metadata:
   name: machinegroup-sample
 spec:
-  # Add fields here
-  foo: bar
+  type: bare
+  user: deploy
+  dtnode: dtnode-sample
+  password: deploy@1298
+  cpu: 2
+  memory: 256
+  disk: "100"
+  rs: 10

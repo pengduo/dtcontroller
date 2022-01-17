@@ -35,6 +35,7 @@ type MachineGroupStatus struct {
 }
 
 //+kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
+//+kubebuilder:printcolumn:name="Rs",type=string,JSONPath=`.status.rs`
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
