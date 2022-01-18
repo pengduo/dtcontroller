@@ -12,6 +12,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	appsv1 "dtcontroller/api/v1"
+	"dtcontroller/util"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // MachineGroupReconciler reconciles a MachineGroup object
@@ -48,7 +51,33 @@ func (r *MachineGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, nil
 	}
 
-	// todo
+	// 生成一组machine
+
+	for i := 0; i < int(machinegroup.Spec.Rs); i++ {
+		var suffix string = util.String(8)
+		var name string = machinegroup.Name + suffix
+		machine := &appsv1.Machine{
+			TypeMeta: metav1.TypeMeta{APIVersion: appsv1.GroupVersion.Version, Kind: "Machine"},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name,
+				Namespace: machinegroup.Namespace,
+			},
+			Spec: appsv1.MachineSpec{
+				DtNode:   machinegroup.Spec.DtNode,
+				Type:     machinegroup.Spec.Type,
+				User:     machinegroup.Spec.User,
+				Password: machinegroup.Spec.Password,
+				Cpu:      machinegroup.Spec.Cpu,
+				Memory:   machinegroup.Spec.Memory,
+				Disk:     machinegroup.Spec.Disk,
+				Base:     machinegroup.Spec.Base,
+				Os:       machinegroup.Spec.Os,
+			},
+		}
+		if err := assignMachine(ctx, machine, *dtnode); err != nil {
+			logrus.Info("出错了", err)
+		}
+	}
 
 	machinegroup.Status.Phase = "Ready"
 	machinegroup.Status.Rs = strings.Join([]string{strconv.Itoa(int(machinegroup.Spec.Rs)), strconv.Itoa(int(machinegroup.Spec.Rs))}, "/")
