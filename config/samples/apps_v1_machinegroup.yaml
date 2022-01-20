@@ -10,4 +10,4 @@ spec:
   cpu: 2
   memory: 256
   disk: "100"
-  rs: 10
+  rs: 2

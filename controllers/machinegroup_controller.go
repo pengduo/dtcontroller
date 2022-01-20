@@ -7,8 +7,11 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/cri-api/pkg/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	appsv1 "dtcontroller/api/v1"
@@ -26,6 +29,8 @@ type MachineGroupReconciler struct {
 //+kubebuilder:rbac:groups=apps.dtwave.com,resources=machinegroups,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=apps.dtwave.com,resources=machinegroups/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=apps.dtwave.com,resources=machinegroups/finalizers,verbs=update
+//+kubebuilder:rbac:groups=apps.dtwave.com,resources=machines,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=apps.dtwave.com,resources=machines/status,verbs=get;update;patch
 
 func (r *MachineGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
@@ -51,11 +56,12 @@ func (r *MachineGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, nil
 	}
 
+	var rs int = 0
 	// 生成一组machine
-
 	for i := 0; i < int(machinegroup.Spec.Rs); i++ {
 		var suffix string = util.String(8)
-		var name string = machinegroup.Name + suffix
+		var name string = machinegroup.Name + "-" + suffix
+		logrus.Info("name=", name)
 		machine := &appsv1.Machine{
 			TypeMeta: metav1.TypeMeta{APIVersion: appsv1.GroupVersion.Version, Kind: "Machine"},
 			ObjectMeta: metav1.ObjectMeta{
@@ -74,13 +80,23 @@ func (r *MachineGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request
 				Os:       machinegroup.Spec.Os,
 			},
 		}
-		if err := assignMachine(ctx, machine, *dtnode); err != nil {
-			logrus.Info("出错了", err)
+		if err := controllerutil.SetControllerReference(machinegroup, machine, r.Scheme); err != nil {
+			return ctrl.Result{}, err
+		}
+		logrus.Info("ssssssss")
+		err := r.Get(ctx, types.NamespacedName{Name: machine.Name, Namespace: machine.Namespace}, machine)
+		if err != nil && errors.IsNotFound(err) {
+			logrus.Info(machine.Name)
+			if err = r.Create(ctx, machine); err != nil {
+				logrus.Info("出错了", machine.Name)
+				return ctrl.Result{}, nil
+			}
+			rs = rs + 1
 		}
 	}
 
 	machinegroup.Status.Phase = "Ready"
-	machinegroup.Status.Rs = strings.Join([]string{strconv.Itoa(int(machinegroup.Spec.Rs)), strconv.Itoa(int(machinegroup.Spec.Rs))}, "/")
+	machinegroup.Status.Rs = strconv.Itoa(rs)
 	r.Status().Update(ctx, machinegroup)
 	return ctrl.Result{}, nil
 }
@@ -89,5 +105,6 @@ func (r *MachineGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request
 func (r *MachineGroupReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&appsv1.MachineGroup{}).
+		Owns(&appsv1.Machine{}).
 		Complete(r)
 }

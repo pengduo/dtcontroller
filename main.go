@@ -72,7 +72,7 @@ func main() {
 		HealthProbeBindAddress:  probeAddr,
 		LeaderElection:          enableLeaderElection,
 		LeaderElectionID:        "4b92ddc1.dtwave.com",
-		LeaderElectionNamespace: "default",
+		LeaderElectionNamespace: "dtcontroller-system",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")

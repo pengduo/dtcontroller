@@ -153,7 +153,7 @@ func destoryMachine(ctx context.Context, machine *appsv1.Machine,
 
 // 分配Machine资源处理方法
 func assignMachine(ctx context.Context, machine *appsv1.Machine, dtnode appsv1.DtNode) error {
-	logrus.Info("创建machine")
+	logrus.Info("创建machine", machine.Name)
 	vURL := strings.Join([]string{"https://", dtnode.Spec.User, ":",
 		dtnode.Spec.Password, "@", dtnode.Spec.Ip, "/sdk"}, "")
 	vmClient, err := vmsdk.Vmclient(ctx, vURL, dtnode.Spec.User, dtnode.Spec.Password)
