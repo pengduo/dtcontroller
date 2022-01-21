@@ -15,7 +15,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	appsv1 "dtcontroller/api/v1"
-	"dtcontroller/util"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -59,8 +58,7 @@ func (r *MachineGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	var rs int = 0
 	// 生成一组machine
 	for i := 0; i < int(machinegroup.Spec.Rs); i++ {
-		var suffix string = util.String(8)
-		var name string = machinegroup.Name + "-" + suffix
+		var name string = machinegroup.Name + "-" + strconv.Itoa(int(i))
 		logrus.Info("name=", name)
 		machine := &appsv1.Machine{
 			TypeMeta: metav1.TypeMeta{APIVersion: appsv1.GroupVersion.Version, Kind: "Machine"},
@@ -83,7 +81,6 @@ func (r *MachineGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		if err := controllerutil.SetControllerReference(machinegroup, machine, r.Scheme); err != nil {
 			return ctrl.Result{}, err
 		}
-		logrus.Info("ssssssss")
 		err := r.Get(ctx, types.NamespacedName{Name: machine.Name, Namespace: machine.Namespace}, machine)
 		if err != nil && errors.IsNotFound(err) {
 			logrus.Info(machine.Name)
