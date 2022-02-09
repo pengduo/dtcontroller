@@ -1,0 +1,24 @@
+# permissions for end users to edit dtclusters.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dtcluster-editor-role
+rules:
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - dtclusters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - dtclusters/status
+  verbs:
+  - get

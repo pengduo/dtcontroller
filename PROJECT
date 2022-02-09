@@ -15,11 +15,28 @@ resources:
   version: v1
 - api:
     crdVersion: v1
-    namespaced: false
   controller: true
   domain: dtwave.com
   group: apps
   kind: DtNode
+  path: dtcontroller/api/v1
+  version: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: dtwave.com
+  group: apps
+  kind: DtCluster
+  path: dtcontroller/api/v1
+  version: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: dtwave.com
+  group: apps
+  kind: DtModel
   path: dtcontroller/api/v1
   version: v1
 version: "3"

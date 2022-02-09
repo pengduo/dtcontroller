@@ -94,6 +94,20 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "DtNode")
 		os.Exit(1)
 	}
+	if err = (&controllers.DtClusterReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "DtCluster")
+		os.Exit(1)
+	}
+	if err = (&controllers.DtModelReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "DtModel")
+		os.Exit(1)
+	}
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {

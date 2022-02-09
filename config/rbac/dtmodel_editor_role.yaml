@@ -1,0 +1,24 @@
+# permissions for end users to edit dtmodels.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dtmodel-editor-role
+rules:
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - dtmodels
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - dtmodels/status
+  verbs:
+  - get

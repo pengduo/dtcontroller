@@ -1,0 +1,6 @@
+apiVersion: apps.dtwave.com/v1
+kind: DtModel
+metadata:
+  name: dtmodel-sample
+spec:
+  # TODO(user): Add fields here
