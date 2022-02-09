@@ -29,7 +29,7 @@ type DtNodeSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 	Provider string `json:"provider,omitempty"`
-	Ip       string `json:"ip,omitempty"`
+	Ip       string `json:"s,omitempty"`
 	User     string `json:"user,omitempty"`
 	Password string `json:"password,omitempty"`
 

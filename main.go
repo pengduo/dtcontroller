@@ -79,7 +79,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.MachineReconciler{
+	if err = (&controllers.DtMachineReconciler{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("Machine"),

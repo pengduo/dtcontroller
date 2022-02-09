@@ -1,5 +1,5 @@
 apiVersion: apps.dtwave.com/v1
-kind: Machine
+kind: DtMachine
 metadata:
   name: machine-sample
 spec:

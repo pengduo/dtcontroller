@@ -1,20 +1,24 @@
-# permissions for end users to view machines.
+# permissions for end users to edit machines.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: machine-viewer-role
+  name: machine-editor-role
 rules:
 - apiGroups:
   - apps.dtwave.com
   resources:
-  - machines
+  - dtmachines
   verbs:
+  - create
+  - delete
   - get
   - list
+  - patch
+  - update
   - watch
 - apiGroups:
   - apps.dtwave.com
   resources:
-  - machines/status
+  - dtmachines/status
   verbs:
   - get

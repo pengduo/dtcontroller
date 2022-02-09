@@ -61,13 +61,13 @@ func (r *MachineGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	for i := 0; i < int(machinegroup.Spec.Rs); i++ {
 		var name string = machinegroup.Name + "-" + strconv.Itoa(int(i))
 		logrus.Info("name=", name)
-		machine := &appsv1.Machine{
+		machine := &appsv1.DtMachine{
 			TypeMeta: metav1.TypeMeta{APIVersion: appsv1.GroupVersion.Version, Kind: "Machine"},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      name,
 				Namespace: machinegroup.Namespace,
 			},
-			Spec: appsv1.MachineSpec{
+			Spec: appsv1.DtMachineSpec{
 				DtNode:   machinegroup.Spec.DtNode,
 				Type:     machinegroup.Spec.Type,
 				User:     machinegroup.Spec.User,
@@ -103,6 +103,6 @@ func (r *MachineGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request
 func (r *MachineGroupReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&appsv1.MachineGroup{}).
-		Owns(&appsv1.Machine{}).
+		Owns(&appsv1.DtMachine{}).
 		Complete(r)
 }

@@ -68,13 +68,13 @@ spec:
                 type: string
               datastore:
                 type: string
-              ip:
-                type: string
               password:
                 type: string
               provider:
                 description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
                   Important: Run "make" to regenerate code after modifying this file'
+                type: string
+              s:
                 type: string
               user:
                 type: string

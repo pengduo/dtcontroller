@@ -6,14 +6,14 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: machines.apps.dtwave.com
+  name: dtmachines.apps.dtwave.com
 spec:
   group: apps.dtwave.com
   names:
-    kind: Machine
-    listKind: MachineList
-    plural: machines
-    singular: machine
+    kind: DtMachine
+    listKind: DtMachineList
+    plural: dtmachines
+    singular: dtmachine
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
@@ -47,7 +47,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: Machine结构体 MachineSpec defines the desired state of Machine
+            description: Machine结构体 DtMachineSpec defines the desired state of Machine
             properties:
               base:
                 type: string

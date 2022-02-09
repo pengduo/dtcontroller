@@ -25,24 +25,24 @@ import (
 	logrus "github.com/sirupsen/logrus"
 )
 
-// MachineReconciler reconciles a Machine object
-type MachineReconciler struct {
+// DtMachineReconciler reconciles a Machine object
+type DtMachineReconciler struct {
 	client.Client
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
 }
 
 // 定义预删除标记
-const machineFinalizer = "machine.finalizers.dtwave"
+const machineFinalizer = "dtmachine.finalizers.dtwave"
 
-//+kubebuilder:rbac:groups=apps.dtwave.com,resources=machines,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=apps.dtwave.com,resources=machines/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=apps.dtwave.com,resources=machines/finalizers,verbs=update
+//+kubebuilder:rbac:groups=apps.dtwave.com,resources=dtmachines,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=apps.dtwave.com,resources=dtmachines/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=apps.dtwave.com,resources=dtmachines/finalizers,verbs=update
 
-func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *DtMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	var machine = &appsv1.Machine{}
+	var machine = &appsv1.DtMachine{}
 	var dtnode = &appsv1.DtNode{}
 	if err := r.Get(ctx, req.NamespacedName, machine); err != nil {
 		logrus.Info("找不到Machine")
@@ -95,8 +95,8 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 }
 
 // 删除逻辑
-func (r *MachineReconciler) machineFinalizer(ctx context.Context,
-	machine *appsv1.Machine, dtnode *appsv1.DtNode) error {
+func (r *DtMachineReconciler) machineFinalizer(ctx context.Context,
+	machine *appsv1.DtMachine, dtnode *appsv1.DtNode) error {
 	err := destoryMachine(ctx, machine, dtnode)
 	if err != nil {
 		logrus.Info("删除虚拟机失败")
@@ -106,7 +106,7 @@ func (r *MachineReconciler) machineFinalizer(ctx context.Context,
 }
 
 //从vcenter删除虚拟机
-func destoryMachine(ctx context.Context, machine *appsv1.Machine,
+func destoryMachine(ctx context.Context, machine *appsv1.DtMachine,
 	dtnode *appsv1.DtNode) error {
 	logrus.Info("开始删除机器实例")
 	vURL := strings.Join([]string{"https://", dtnode.Spec.User, ":",
@@ -152,7 +152,7 @@ func destoryMachine(ctx context.Context, machine *appsv1.Machine,
 }
 
 // 分配Machine资源处理方法
-func assignMachine(ctx context.Context, machine *appsv1.Machine, dtnode appsv1.DtNode) error {
+func assignMachine(ctx context.Context, machine *appsv1.DtMachine, dtnode appsv1.DtNode) error {
 	logrus.Info("创建machine", machine.Name)
 	vURL := strings.Join([]string{"https://", dtnode.Spec.User, ":",
 		dtnode.Spec.Password, "@", dtnode.Spec.Ip, "/sdk"}, "")
@@ -250,8 +250,8 @@ func assignMachine(ctx context.Context, machine *appsv1.Machine, dtnode appsv1.D
 
 // 注册控制器
 // SetupWithManager sets up the controller with the Manager.
-func (r *MachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *DtMachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&appsv1.Machine{}).
+		For(&appsv1.DtMachine{}).
 		Complete(r)
 }

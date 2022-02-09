@@ -10,12 +10,12 @@ resources:
   controller: true
   domain: dtwave.com
   group: apps
-  kind: Machine
+  kind: DtMachine
   path: dtcontroller/api/v1
   version: v1
 - api:
     crdVersion: v1
-    namespaced: true
+    namespaced: false
   controller: true
   domain: dtwave.com
   group: apps

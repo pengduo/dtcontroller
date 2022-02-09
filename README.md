@@ -62,7 +62,8 @@ spec:
 ```shell
 kubectl apply -f machine-sample.yaml
 ```
- machine作为虚拟机实例的抽象，从Dtnode上分配出来
+
+machine作为虚拟机实例的抽象，从Dtnode上分配出来
 
 ## 开发文档
 
