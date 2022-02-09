@@ -12,6 +12,5 @@ require (
 	golang.org/x/tools v0.1.7 // indirect
 	k8s.io/apimachinery v0.20.2
 	k8s.io/client-go v0.20.2
-	k8s.io/cri-api v0.23.3
 	sigs.k8s.io/controller-runtime v0.8.3
 )
