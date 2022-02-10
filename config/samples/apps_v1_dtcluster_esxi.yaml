@@ -1,0 +1,15 @@
+apiVersion: apps.dtwave.com/v1
+kind: DtCluster
+metadata:
+  name: dtcluster-sample
+spec:
+  labels:
+    a: b
+  provider: "esxi"
+  desc: "esxi测试"
+  content:
+    ip: "192.168.123.138"
+    user: "linjb@vsphere.local"
+    password: "LIN115jinbao!"
+    datacenter: "sss"
+    datastore: "bigdata"

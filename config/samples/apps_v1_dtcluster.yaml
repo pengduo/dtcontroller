@@ -1,6 +1,0 @@
-apiVersion: apps.dtwave.com/v1
-kind: DtCluster
-metadata:
-  name: dtcluster-sample
-spec:
-  # TODO(user): Add fields here

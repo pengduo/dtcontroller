@@ -9,6 +9,32 @@ rules:
 - apiGroups:
   - apps.dtwave.com
   resources:
+  - dtclusters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - dtclusters/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - dtclusters/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - apps.dtwave.com
+  resources:
   - dtmachines
   verbs:
   - create
@@ -28,6 +54,32 @@ rules:
   - apps.dtwave.com
   resources:
   - dtmachines/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - dtmodels
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - dtmodels/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - apps.dtwave.com
+  resources:
+  - dtmodels/status
   verbs:
   - get
   - patch

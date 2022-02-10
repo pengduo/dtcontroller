@@ -2,7 +2,7 @@ apiVersion: apps.dtwave.com/v1
 kind: DtNode
 metadata:
   name: dtnode-sample
-x:
+spec:
   provider: vmware
   ip: "192.168.123.138"
   user: "linjb@vsphere.local"

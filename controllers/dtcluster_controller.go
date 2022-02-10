@@ -1,24 +1,9 @@
-/*
-Copyright 2021.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package controllers
 
 import (
 	"context"
 
+	logrus "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -49,7 +34,14 @@ type DtClusterReconciler struct {
 func (r *DtClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	var dtCluster = &appsv1.DtCluster{}
+	if err := r.Get(ctx, req.NamespacedName, dtCluster); err != nil {
+		logrus.Info("找不到dtCluster")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	dtCluster.Status.Bound = true
+	r.Status().Update(ctx, dtCluster)
 
 	return ctrl.Result{}, nil
 }

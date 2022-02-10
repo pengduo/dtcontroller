@@ -28,8 +28,11 @@ import (
 type DtNodeSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
+	Labels map[string]string `json:"labels,omitempty"`
+
 	Provider string `json:"provider,omitempty"`
-	Ip       string `json:"s,omitempty"`
+	Ip       string `json:"ip,omitempty"`
 	User     string `json:"user,omitempty"`
 	Password string `json:"password,omitempty"`
 

@@ -6,48 +6,27 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: dtnodes.apps.dtwave.com
+  name: dtclusters.apps.dtwave.com
 spec:
   group: apps.dtwave.com
   names:
-    kind: DtNode
-    listKind: DtNodeList
-    plural: dtnodes
-    singular: dtnode
+    kind: DtCluster
+    listKind: DtClusterList
+    plural: dtclusters
+    singular: dtcluster
   scope: Cluster
   versions:
   - additionalPrinterColumns:
     - jsonPath: .spec.provider
       name: Provider
       type: string
-    - jsonPath: .spec.datacenter
-      name: Datacenter
+    - jsonPath: .spec.desc
+      name: Desc
       type: string
-    - jsonPath: .spec.datastore
-      name: Datastore
-      type: string
-    - jsonPath: .status.phase
-      name: Phase
-      type: string
-    - jsonPath: .status.version
-      name: Version
-      type: string
-    - jsonPath: .status.cpu
-      name: Cpu
-      type: string
-    - jsonPath: .status.memory
-      name: Memory
-      type: string
-    - jsonPath: .status.storage
-      name: Storage
-      type: string
-    - jsonPath: .status.vms
-      name: Vms
-      type: integer
     name: v1
     schema:
       openAPIV3Schema:
-        description: DtNode is the Schema for the dtnodes API
+        description: DtCluster is the Schema for the dtclusters API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -62,51 +41,29 @@ spec:
           metadata:
             type: object
           spec:
-            description: DtNode结构体 DtNodeSpec defines the desired state of DtNode
+            description: DtClusterSpec defines the desired state of DtCluster
             properties:
-              datacenter:
-                type: string
-              datastore:
-                type: string
-              ip:
+              content:
+                additionalProperties:
+                  type: string
+                type: object
+              desc:
                 type: string
               labels:
                 additionalProperties:
                   type: string
                 type: object
-              password:
-                type: string
               provider:
-                type: string
-              user:
                 type: string
             type: object
           status:
-            description: 状态信息 DtNodeStatus defines the observed state of DtNode
+            description: DtClusterStatus defines the observed state of DtCluster
             properties:
-              age:
-                type: string
-              cpu:
-                type: string
-              hosts:
-                type: integer
-              memory:
-                type: string
-              networks:
-                type: integer
-              phase:
+              bound:
                 description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
                   of cluster Important: Run "make" to regenerate code after modifying
                   this file'
-                type: string
-              storage:
-                type: string
-              ttl:
-                type: string
-              version:
-                type: string
-              vms:
-                type: integer
+                type: boolean
             type: object
         type: object
     served: true
