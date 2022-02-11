@@ -1,4 +1,4 @@
-package vmsdk
+package esxi
 
 import (
 	"fmt"

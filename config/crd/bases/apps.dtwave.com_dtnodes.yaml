@@ -20,30 +20,9 @@ spec:
     - jsonPath: .spec.provider
       name: Provider
       type: string
-    - jsonPath: .spec.datacenter
-      name: Datacenter
+    - jsonPath: .status.node
+      name: Node
       type: string
-    - jsonPath: .spec.datastore
-      name: Datastore
-      type: string
-    - jsonPath: .status.phase
-      name: Phase
-      type: string
-    - jsonPath: .status.version
-      name: Version
-      type: string
-    - jsonPath: .status.cpu
-      name: Cpu
-      type: string
-    - jsonPath: .status.memory
-      name: Memory
-      type: string
-    - jsonPath: .status.storage
-      name: Storage
-      type: string
-    - jsonPath: .status.vms
-      name: Vms
-      type: integer
     name: v1
     schema:
       openAPIV3Schema:
@@ -64,49 +43,29 @@ spec:
           spec:
             description: DtNode结构体 DtNodeSpec defines the desired state of DtNode
             properties:
-              datacenter:
+              desc:
                 type: string
-              datastore:
-                type: string
-              ip:
-                type: string
+              dtcluster:
+                additionalProperties:
+                  type: string
+                type: object
               labels:
                 additionalProperties:
                   type: string
                 type: object
-              password:
-                type: string
               provider:
-                type: string
-              user:
                 type: string
             type: object
           status:
             description: 状态信息 DtNodeStatus defines the observed state of DtNode
             properties:
-              age:
+              node:
                 type: string
-              cpu:
-                type: string
-              hosts:
-                type: integer
-              memory:
-                type: string
-              networks:
-                type: integer
               phase:
                 description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
                   of cluster Important: Run "make" to regenerate code after modifying
                   this file'
                 type: string
-              storage:
-                type: string
-              ttl:
-                type: string
-              version:
-                type: string
-              vms:
-                type: integer
             type: object
         type: object
     served: true

@@ -49,25 +49,23 @@ spec:
           spec:
             description: Machine结构体 DtMachineSpec defines the desired state of Machine
             properties:
-              base:
+              dept:
                 type: string
-              cpu:
-                format: int32
-                type: integer
-              disk:
+              desc:
                 type: string
-              dtnode:
+              dtcluster:
                 type: string
-              memory:
-                format: int64
-                type: integer
-              os:
+              dtmodel:
                 type: string
-              password:
+              labels:
+                additionalProperties:
+                  type: string
+                type: object
+              mantainer:
                 type: string
-              type:
+              releasedate:
                 type: string
-              user:
+              releasestragle:
                 type: string
             type: object
           status:

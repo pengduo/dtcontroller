@@ -13,19 +13,15 @@ type DtMachineSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	DtNode   string `json:"dtnode,omitempty"`
-	Type     string `json:"type,omitempty"`
-	User     string `json:"user,omitempty"`
-	Password string `json:"password,omitempty"`
-	Cpu      int32  `json:"cpu,omitempty"`
-	Memory   int64  `json:"memory,omitempty"`
-	Disk     string `json:"disk,omitempty"`
-	Base     string `json:"base,omitempty"`
-	Os       string `json:"os,omitempty"`
-	//负责部门
-	//负责人
-	//释放策略
+	Labels         map[string]string `json:"labels,omitempty"`
+	Desc           string            `json:"desc,omitempty"`
+	Dept           string            `json:"dept,omitempty"`
+	Mantainer      string            `json:"mantainer,omitempty"`
+	ReleaseStragle string            `json:"releasestragle,omitempty"`
+	ReleaseDate    string            `json:"releasedate,omitempty"`
 
+	DtCluster string `json:"dtcluster,omitempty"`
+	DtModel   string `json:"dtmodel,omitempty"`
 }
 
 // 状态信息
@@ -42,10 +38,10 @@ type DtMachineStatus struct {
 	DiskUsed   string `json:"diskused,omitempty"`
 }
 
-// +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
-// +kubebuilder:printcolumn:name="Ip",type=string,JSONPath=`.status.ip`
-// +kubebuilder:printcolumn:name="DtNode",type=string,JSONPath=`.spec.dtnode`
-// +kubebuilder:printcolumn:name="type",type=string,JSONPath=`.spec.type`
+//+kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
+//+kubebuilder:printcolumn:name="Ip",type=string,JSONPath=`.status.ip`
+//+kubebuilder:printcolumn:name="DtNode",type=string,JSONPath=`.spec.dtnode`
+//+kubebuilder:printcolumn:name="type",type=string,JSONPath=`.spec.type`
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 

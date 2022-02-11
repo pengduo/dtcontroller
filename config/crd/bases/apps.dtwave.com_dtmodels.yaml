@@ -36,13 +36,27 @@ spec:
           spec:
             description: DtModelSpec defines the desired state of DtModel
             properties:
-              foo:
-                description: Foo is an example field of DtModel. Edit dtmodel_types.go
-                  to remove/update
+              content:
+                additionalProperties:
+                  type: string
+                type: object
+              desc:
+                type: string
+              labels:
+                additionalProperties:
+                  type: string
+                type: object
+              type:
                 type: string
             type: object
           status:
             description: DtModelStatus defines the observed state of DtModel
+            properties:
+              bound:
+                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                  of cluster Important: Run "make" to regenerate code after modifying
+                  this file'
+                type: boolean
             type: object
         type: object
     served: true

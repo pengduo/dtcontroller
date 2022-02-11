@@ -3,9 +3,7 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
-	"time"
 
 	logrus "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -15,7 +13,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	appsv1 "dtcontroller/api/v1"
-	"dtcontroller/vmsdk"
+	"dtcontroller/util"
+	"dtcontroller/vmsdk/esxi"
+)
+
+const (
+	Ready    = "ready"
+	NotReady = "notready"
+	UnKnown  = "unknown"
 )
 
 // DtNodeReconciler reconciles a DtNode object
@@ -29,51 +34,65 @@ type DtNodeReconciler struct {
 //+kubebuilder:rbac:groups=apps.dtwave.com,resources=dtnodes/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=apps.dtwave.com,resources=dtnodes/finalizers,verbs=update
 
-func (dtnodeReconciler *DtNodeReconciler) Reconcile(ctx context.Context,
+func (r *DtNodeReconciler) Reconcile(ctx context.Context,
 	req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
 	dtnode := &appsv1.DtNode{}
-	if err := dtnodeReconciler.Get(ctx, req.NamespacedName, dtnode); err != nil {
+	if err := r.Get(ctx, req.NamespacedName, dtnode); err != nil {
 		logrus.Info("找不到dtnode")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	ip := dtnode.Spec.Ip
-	username := dtnode.Spec.User
-	password := dtnode.Spec.Password
+	var dtClusterNameMap = dtnode.Spec.DtCluster
+	var dtcluster = &appsv1.DtCluster{}
+
+	// 检查dtnode绑定的dtcluster有效性
+	for key, value := range dtClusterNameMap {
+		fmt.Println(key, value)
+		if err := r.Get(ctx, client.ObjectKey{Name: key}, dtcluster); err != nil {
+			logrus.Info("找不到dtcluster", key)
+			dtClusterNameMap[key] = UnKnown
+		} else if err = checkConnect(dtcluster.Spec.Provider, dtcluster.Spec.Content); err != nil {
+			dtClusterNameMap[key] = NotReady
+		}
+	}
+	r.Update(ctx, dtnode)
+
+	return ctrl.Result{}, nil
+}
+
+// checkContent is used to check if the dtcluster right
+func checkConnect(provider string, content map[string]string) error {
+
+	if provider == "esxi" {
+		var ip = content["ip"]
+		var username = content["username"]
+		var password = content["password"]
+		if ip == "" || username == "" || password == "" {
+			return &util.Err{Msg: "check is there an error in ip username or password"}
+		}
+		return checkConnectESXI(ip, username, password)
+	}
+	return &util.Err{Msg: "unsupported provider"}
+}
+
+// if provider is set to esxi, check if accessful
+func checkConnectESXI(ip string, username string, password string) error {
 	vURL := strings.Join([]string{"https://", username, ":", password, "@", ip, "/sdk"}, "")
-
-	dtnode.Status.Phase = "Ready"
-
-	vmclient, err := vmsdk.Vmclient(ctx, vURL, username, password)
+	_, err := esxi.Vmclient(context.Background(), vURL, username, password)
 	if err != nil {
 		fmt.Println("error when building vm client")
-		dtnode.Status.Phase = "UnReady"
-		return ctrl.Result{}, nil
+		return err
 	}
+	return nil
+}
 
-	//更新status字段
-	version := vmclient.Version
-	dtnode.Status.Version = version
+// if provider is set to aliyun, check if accessful
+// todo
+func checkAliyun() error {
 
-	createTime := dtnode.ObjectMeta.CreationTimestamp
-	currentTime := time.Now()
-	age := currentTime.Local().UTC().Sub(createTime.Time)
-	dtnode.Status.Age = strconv.FormatFloat(age.Hours(), 'f', 2, 64)
-
-	err = vmsdk.GetDtNodeInfo(ctx, vmclient.Client, dtnode)
-	if err != nil {
-		logrus.Info("Dtnode注册失败", err)
-		dtnode.Status.Phase = "Failed"
-		dtnodeReconciler.Status().Update(ctx, dtnode)
-		return ctrl.Result{}, nil
-	}
-	vms := vmsdk.GetVms(ctx, vmclient.Client)
-	dtnode.Status.Vms = len(vms)
-
-	dtnodeReconciler.Status().Update(ctx, dtnode)
-	return ctrl.Result{}, nil
+	return nil
 }
 
 // 注册到manager

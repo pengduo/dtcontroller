@@ -9,8 +9,8 @@ import (
 	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/vapi/rest"
 	"github.com/vmware/govmomi/view"
+	"github.com/vmware/govmomi/vim25"
 	"github.com/vmware/govmomi/vim25/mo"
-	"github.com/vmware/govmomi/vim25/types"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -20,7 +20,7 @@ import (
 
 	appsv1 "dtcontroller/api/v1"
 	"dtcontroller/util"
-	"dtcontroller/vmsdk"
+	"dtcontroller/vmsdk/esxi"
 
 	logrus "github.com/sirupsen/logrus"
 )
@@ -33,7 +33,7 @@ type DtMachineReconciler struct {
 }
 
 // 定义预删除标记
-const machineFinalizer = "dtmachine.finalizers.dtwave"
+const dtMachineFinalizer = "dtmachine.finalizers.dtwave"
 
 //+kubebuilder:rbac:groups=apps.dtwave.com,resources=dtmachines,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=apps.dtwave.com,resources=dtmachines/status,verbs=get;update;patch
@@ -43,40 +43,41 @@ func (r *DtMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	_ = log.FromContext(ctx)
 
 	var machine = &appsv1.DtMachine{}
-	var dtnode = &appsv1.DtNode{}
 	if err := r.Get(ctx, req.NamespacedName, machine); err != nil {
-		logrus.Info("找不到Machine")
+		logrus.Info("找不到DtMachine")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	dtnodeName := machine.Spec.DtNode
-	if err := r.Get(ctx, client.ObjectKey{Name: dtnodeName}, dtnode); err != nil {
-		logrus.Info("dtNode不存在", err)
+	var dtClusterName = machine.Spec.DtCluster
+	var dtCluster = &appsv1.DtCluster{}
+	if err := r.Get(ctx, client.ObjectKey{Name: dtClusterName}, dtCluster); err != nil {
+		logrus.Info("cannot find dtCluster ", err)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-	if dtnode.Status.Phase != "Ready" {
-		logrus.Info("dtnode状态异常")
-		machine.Status.Phase = "Failed"
-		r.Status().Update(ctx, machine)
-		return ctrl.Result{}, nil
+
+	var modelName = machine.Spec.DtModel
+	var model = &appsv1.DtModel{}
+	if err := r.Get(ctx, client.ObjectKey{Name: modelName}, model); err != nil {
+		logrus.Info("cannot find model", modelName, err)
+		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	// 预删除逻辑
 	if machine.ObjectMeta.DeletionTimestamp.IsZero() {
-		if !controllerutil.ContainsFinalizer(machine, machineFinalizer) {
-			controllerutil.AddFinalizer(machine, machineFinalizer)
+		if !controllerutil.ContainsFinalizer(machine, dtMachineFinalizer) {
+			controllerutil.AddFinalizer(machine, dtMachineFinalizer)
 			if err := r.Update(ctx, machine); err != nil {
 				return ctrl.Result{}, err
 			}
 		}
 	} else {
 		//删除逻辑
-		if controllerutil.ContainsFinalizer(machine, machineFinalizer) {
-			if err := r.machineFinalizer(ctx, machine, dtnode); err != nil {
+		if controllerutil.ContainsFinalizer(machine, dtMachineFinalizer) {
+			if err := r.machineFinalizer(ctx, machine.Name, dtCluster); err != nil {
 				return ctrl.Result{}, err
 			}
 
-			controllerutil.RemoveFinalizer(machine, machineFinalizer)
+			controllerutil.RemoveFinalizer(machine, dtMachineFinalizer)
 			if err := r.Update(ctx, machine); err != nil {
 				return ctrl.Result{}, err
 			}
@@ -85,7 +86,7 @@ func (r *DtMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, nil
 	}
 
-	err := assignMachine(ctx, machine, *dtnode)
+	err := assignMachine(ctx, machine, model, dtCluster)
 	if err != nil {
 		logrus.Info("部署出错了")
 		machine.Status.Phase = "Failed"
@@ -94,24 +95,44 @@ func (r *DtMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	return ctrl.Result{}, nil
 }
 
+// assignMachine is desined to deploy a machine with target dtcluster configuration
+func assignMachine(ctx context.Context, machine *appsv1.DtMachine, model *appsv1.DtModel, dtcluster *appsv1.DtCluster) error {
+	var content = dtcluster.Spec.Content
+	if dtcluster.Spec.Provider == string(ESXI) {
+		var ip = content["ip"]
+		var username = content["username"]
+		var password = content["password"]
+		if ip == "" || username == "" || password == "" {
+			return &util.Err{Msg: "check is there an error in ip or username or password"}
+		}
+		return assignMachineESXI(ctx, machine, model, ip, username, password)
+	}
+	return nil
+}
+
 // 删除逻辑
-func (r *DtMachineReconciler) machineFinalizer(ctx context.Context,
-	machine *appsv1.DtMachine, dtnode *appsv1.DtNode) error {
-	err := destoryMachine(ctx, machine, dtnode)
-	if err != nil {
-		logrus.Info("删除虚拟机失败")
-		return err
+func (r *DtMachineReconciler) machineFinalizer(ctx context.Context, machineName string, dtCluster *appsv1.DtCluster) error {
+	var content = dtCluster.Spec.Content
+	var provider = dtCluster.Spec.Provider
+	if provider == "esxi" {
+		var ip = content["ip"]
+		var username = content["username"]
+		var password = content["password"]
+		if ip == "" || username == "" || password == "" {
+			return &util.Err{Msg: "check is there an error in ip username or password"}
+		}
+		return destoryMachineESXI(ctx, machineName, ip, username, password)
 	}
 	return nil
 }
 
 //从vcenter删除虚拟机
-func destoryMachine(ctx context.Context, machine *appsv1.DtMachine,
-	dtnode *appsv1.DtNode) error {
+func destoryMachineESXI(ctx context.Context, machineName string,
+	ip string, username string, password string) error {
 	logrus.Info("开始删除机器实例")
-	vURL := strings.Join([]string{"https://", dtnode.Spec.User, ":",
-		dtnode.Spec.Password, "@", dtnode.Spec.Ip, "/sdk"}, "")
-	c, err := vmsdk.Vmclient(ctx, vURL, dtnode.Spec.User, dtnode.Spec.Password)
+	vURL := strings.Join([]string{"https://", username, ":",
+		password, "@", ip, "/sdk"}, "")
+	c, err := esxi.Vmclient(ctx, vURL, username, password)
 	if err != nil {
 		logrus.Info(err.Error())
 		return err
@@ -127,14 +148,14 @@ func destoryMachine(ctx context.Context, machine *appsv1.DtMachine,
 	var vm mo.VirtualMachine
 	err = v.RetrieveWithFilter(ctx, []string{"VirtualMachine"}, []string{"summary"},
 		&vm, property.Filter{
-			"name": machine.Name,
+			"name": machineName,
 		})
 	if err != nil {
-		logrus.Info("无法找到目标虚拟机，结束删除操作")
+		logrus.Info("无法找到目标虚拟机,结束删除操作")
 		return nil
 	}
 	//先关机
-	var objectVm = *vmsdk.Mo2object(c.Client, &vm)
+	var objectVm = *esxi.Mo2object(c.Client, &vm)
 
 	_, err = objectVm.PowerOff(ctx)
 	if err != nil {
@@ -142,7 +163,7 @@ func destoryMachine(ctx context.Context, machine *appsv1.DtMachine,
 		return err
 	}
 
-	err = vmsdk.VmDelete(ctx, &objectVm)
+	err = esxi.VmDelete(ctx, &objectVm)
 	if err != nil {
 		logrus.Info("出错了", err.Error())
 		return err
@@ -151,12 +172,12 @@ func destoryMachine(ctx context.Context, machine *appsv1.DtMachine,
 	return nil
 }
 
-// 分配Machine资源处理方法
-func assignMachine(ctx context.Context, machine *appsv1.DtMachine, dtnode appsv1.DtNode) error {
+// 在ESXI部署DtMachine
+func assignMachineESXI(ctx context.Context, machine *appsv1.DtMachine, model *appsv1.DtModel, ip string, username string, password string) error {
 	logrus.Info("创建machine", machine.Name)
-	vURL := strings.Join([]string{"https://", dtnode.Spec.User, ":",
-		dtnode.Spec.Password, "@", dtnode.Spec.Ip, "/sdk"}, "")
-	vmClient, err := vmsdk.Vmclient(ctx, vURL, dtnode.Spec.User, dtnode.Spec.Password)
+	vURL := strings.Join([]string{"https://", username, ":",
+		password, "@", ip, "/sdk"}, "")
+	vmClient, err := esxi.Vmclient(ctx, vURL, username, password)
 	if err != nil {
 		logrus.Info(err.Error())
 		return err
@@ -178,73 +199,103 @@ func assignMachine(ctx context.Context, machine *appsv1.DtMachine, dtnode appsv1
 		logrus.Info("已经存在该名称的虚拟机")
 		machine.Status.Phase = "ready"
 		machine.Status.Ip = vm.Summary.Guest.IpAddress
-		machine.Status.CpuUsed = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxCpuUsage)), strconv.Itoa(int(machine.Spec.Cpu))}, "/")
-		machine.Status.HostName = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxMemoryUsage)), strconv.Itoa(int(machine.Spec.Memory))}, "/")
+		machine.Status.CpuUsed = ""
+		machine.Status.HostName = ""
 		return nil
 	}
 	// 2. 判断部署类型
-	switch machine.Spec.Type {
+	switch model.Spec.Type {
 	case "bare":
-		if machine.Status.Phase == "Ready" {
-			break
-		}
-		vm, err := vmsdk.NewVirtualMachine(vmClient.Client, machine.Name,
-			dtnode.Spec.Datastore, machine.Spec.Cpu, machine.Spec.Memory,
-			string(types.VirtualMachineGuestOsIdentifierCentos7_64Guest),
-		)
-		if err != nil {
-			logrus.Info("部署失败")
-			machine.Status.Phase = "Failed"
-			machine.Status.CpuUsed = "unknown"
-			machine.Status.DiskUsed = "unknown"
-			machine.Status.HostName = "unknown"
-			machine.Status.Mac = "unknown"
-			return err
-		} else {
-			logrus.Info("部署机器成功", vm.Summary.Config.Name)
-		}
+		assignMachineESXIBare(machine, model, vmClient.Client)
 	case "clone":
-		if machine.Status.Phase == "Ready" {
-			break
-		}
-		_, err := vmsdk.CloneVm(ctx, machine.Spec.Base, machine.Name, vmClient.Client)
-		if err != nil {
-			logrus.Info("克隆失败", err)
-			machine.Status.Phase = "Failed"
-			return err
-		} else {
-			machine.Status.Phase = "Ready"
-			logrus.Info("克隆机器成功")
-		}
+		assignMachineESXIClone(machine, model, vmClient.Client)
 	case "ovf":
-		rc := rest.NewClient(vmClient.Client)
-		if err := rc.Login(ctx, url.UserPassword(dtnode.Spec.User, dtnode.Spec.Password)); err != nil {
-			logrus.Info("登录出错", err)
-			break
-		}
-		//获取内容库
-		item, err := vmsdk.GetLibraryItem(ctx, rc, "library1", "ovf", "centos7")
-		if err != nil {
-			logrus.Info("内容库获取出错", err)
-			return err
-		}
-		vmsdk.OVF(ctx, vmClient.Client, rc, machine.Name, dtnode.Spec.Datastore, item.ID)
+		assignMachineESXIOVF(machine, model, vmClient.Client, username, password)
 	default:
 		logrus.Info("不支持的部署方式")
 		return util.NewError("不支持的部署方式")
 	}
 	// 3. 检查部署结果
-	err = vmsdk.GetVmInfo(ctx, vmClient.Client, &vm)
+	err = esxi.GetVmInfo(ctx, vmClient.Client, &vm)
 	if err != nil {
 		logrus.Info("获取虚拟机信息出错", err)
 		return err
 	}
 
-	machine.Status.Phase = "Ready"
-	machine.Status.Ip = vm.Summary.Guest.IpAddress
-	machine.Status.CpuUsed = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxCpuUsage)), strconv.Itoa(int(machine.Spec.Cpu))}, "/")
-	machine.Status.HostName = strings.Join([]string{strconv.Itoa(int(vm.Runtime.MaxMemoryUsage)), strconv.Itoa(int(machine.Spec.Memory))}, "/")
+	return nil
+}
 
+// clone a machine with esxi sdk
+func assignMachineESXIClone(machine *appsv1.DtMachine, dtmodel *appsv1.DtModel, c *vim25.Client) error {
+	var content = dtmodel.Spec.Content
+	var base = content["base"]
+	_, err := esxi.CloneVm(context.Background(), base, machine.Name, c)
+	if err != nil {
+		logrus.Info("克隆失败", err)
+		machine.Status.Phase = "Failed"
+		return err
+	} else {
+		machine.Status.Phase = "Ready"
+		logrus.Info("克隆机器成功")
+	}
+	return nil
+}
+
+// create machine through ovf on esxi
+func assignMachineESXIOVF(machine *appsv1.DtMachine, dtmodel *appsv1.DtModel, c *vim25.Client, username string, password string) error {
+	rc := rest.NewClient(c)
+	if err := rc.Login(context.Background(), url.UserPassword(username, password)); err != nil {
+		logrus.Info("登录出错", err)
+		return err
+	}
+
+	var content = dtmodel.Spec.Content
+
+	var ovf = content["ovf"]
+	var library = content["library"]
+	var os = content["os"]
+	var ds = content["ds"]
+
+	if ovf == "" || library == "" || os == "" || ds == "" {
+		return &util.Err{Msg: "ovf or library or os or ds is not set"}
+	}
+	//获取内容库
+	item, err := esxi.GetLibraryItem(context.Background(), rc, library, ovf, os)
+	if err != nil {
+		logrus.Info("内容库获取出错", err)
+		return err
+	}
+	if err := esxi.OVF(context.Background(), c, rc, machine.Name, ds, item.ID); err != nil {
+		logrus.Info("cannot create machine from ovf", err)
+		return err
+	}
+	return nil
+}
+
+func assignMachineESXIBare(machine *appsv1.DtMachine, dtmodel *appsv1.DtModel, c *vim25.Client) error {
+	var content = dtmodel.Spec.Content
+	var ds = content["ds"]
+	var cpu = content["cpu"]
+	var memory = content["cpu"]
+	var os = content["os"]
+
+	cpu32, _ := strconv.ParseInt(cpu, 10, 32)
+	memory64, _ := strconv.ParseInt(memory, 10, 64)
+	vm, err := esxi.NewVirtualMachine(c, machine.Name,
+		ds, int32(cpu32), memory64,
+		os,
+	)
+
+	if err != nil {
+		logrus.Info("部署失败")
+		machine.Status.Phase = "failed"
+		machine.Status.CpuUsed = "unknown"
+		machine.Status.DiskUsed = "unknown"
+		machine.Status.HostName = "unknown"
+		machine.Status.Mac = "unknown"
+		return err
+	}
+	logrus.Info("部署机器成功", vm.Summary.Config.Name)
 	return nil
 }
 

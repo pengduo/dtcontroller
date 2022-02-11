@@ -31,13 +31,9 @@ type DtNodeSpec struct {
 
 	Labels map[string]string `json:"labels,omitempty"`
 
-	Provider string `json:"provider,omitempty"`
-	Ip       string `json:"ip,omitempty"`
-	User     string `json:"user,omitempty"`
-	Password string `json:"password,omitempty"`
-
-	Datacenter string `json:"datacenter,omitempty"`
-	Datastore  string `json:"datastore,omitempty"`
+	Provider  string            `json:"provider,omitempty"`
+	DtCluster map[string]string `json:"dtcluster,omitempty"`
+	Desc      string            `json:"desc,omitempty"`
 }
 
 // 状态信息
@@ -45,27 +41,12 @@ type DtNodeSpec struct {
 type DtNodeStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Phase    string `json:"phase,omitempty"`
-	Age      string `json:"age,omitempty"`
-	Version  string `json:"version,omitempty"`
-	Cpu      string `json:"cpu,omitempty"`
-	Memory   string `json:"memory,omitempty"`
-	Storage  string `json:"storage,omitempty"`
-	Vms      int    `json:"vms,omitempty"`
-	Hosts    int    `json:"hosts,omitempty"`
-	Networks int    `json:"networks,omitempty"`
-	TTL      string `json:"ttl,omitempty"`
+	Phase string `json:"phase,omitempty"`
+	Node  string `json:"node,omitempty"`
 }
 
 //+kubebuilder:printcolumn:name="Provider",type=string,JSONPath=`.spec.provider`
-//+kubebuilder:printcolumn:name="Datacenter",type=string,JSONPath=`.spec.datacenter`
-//+kubebuilder:printcolumn:name="Datastore",type=string,JSONPath=`.spec.datastore`
-//+kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
-//+kubebuilder:printcolumn:name="Version",type=string,JSONPath=`.status.version`
-//+kubebuilder:printcolumn:name="Cpu",type=string,JSONPath=`.status.cpu`
-//+kubebuilder:printcolumn:name="Memory",type=string,JSONPath=`.status.memory`
-//+kubebuilder:printcolumn:name="Storage",type=string,JSONPath=`.status.storage`
-//+kubebuilder:printcolumn:name="Vms",type=integer,JSONPath=`.status.vms`
+//+kubebuilder:printcolumn:name="Node",type=string,JSONPath=`.status.node`
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //+kubebuilder:resource:scope=Cluster

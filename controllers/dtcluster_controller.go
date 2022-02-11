@@ -12,6 +12,17 @@ import (
 	appsv1 "dtcontroller/api/v1"
 )
 
+//虚拟化方案
+type ProviderType string
+
+const (
+	ESXI       ProviderType = "esxi"
+	ALIYUN     ProviderType = "aliyun"
+	PVE        ProviderType = "pve"
+	HYPERVISOR ProviderType = "hypervisor"
+	KUBERNETES ProviderType = "kubernetes"
+)
+
 // DtClusterReconciler reconciles a DtCluster object
 type DtClusterReconciler struct {
 	client.Client

@@ -28,14 +28,17 @@ type DtModelSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of DtModel. Edit dtmodel_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	Labels  map[string]string `json:"labels,omitempty"`
+	Desc    string            `json:"desc,omitempty"`
+	Type    string            `json:"type,omitempty"`
+	Content map[string]string `json:"content,omitempty"` //内容
 }
 
 // DtModelStatus defines the observed state of DtModel
 type DtModelStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	Bound bool `json:"bound,omitempty"`
 }
 
 //+kubebuilder:object:root=true
