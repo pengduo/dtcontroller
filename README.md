@@ -1,8 +1,6 @@
 # 简介
 
-dtcontroller是一系列控制器的整合
-
-其包含以下几种资源的控制：
+resource-operator 是一个资源管控工具，提供了针对虚拟化和容器话的资源管控
 
 1. Machine
 
