@@ -15,8 +15,13 @@ type DtModelSpec struct {
 	Labels   map[string]string `json:"labels,omitempty"`
 	Desc     string            `json:"desc,omitempty"`
 	Provider string            `json:"provider,omitempty"`
-	Type     string            `json:"type,omitempty"`    //类型
-	Content  map[string]string `json:"content,omitempty"` //内容
+	Type     string            `json:"type,omitempty"` //类型
+	Os       string            `json:"os,omitempty"`   //基本信息os
+	Cpu      int32             `json:"cpu,omitempty"`
+	Memory   int64             `json:"memory,omitempty"`
+	Disk     int64             `json:"disk,omitempty"`
+
+	Content map[string]string `json:"content,omitempty"` //内容
 }
 
 // DtModelStatus defines the observed state of DtModel

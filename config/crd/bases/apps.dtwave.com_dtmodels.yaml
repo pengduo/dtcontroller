@@ -40,12 +40,23 @@ spec:
                 additionalProperties:
                   type: string
                 type: object
+              cpu:
+                format: int32
+                type: integer
               desc:
                 type: string
+              disk:
+                format: int64
+                type: integer
               labels:
                 additionalProperties:
                   type: string
                 type: object
+              memory:
+                format: int64
+                type: integer
+              os:
+                type: string
               provider:
                 type: string
               type:

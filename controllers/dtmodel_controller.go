@@ -71,7 +71,8 @@ func (r *DtModelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if dtmodelProvider == "esxi" {
 		switch dtmodelType {
 		case OVF:
-			if err := checkesxiovf(dtmodel.Name, dtmodelContent); err != nil {
+			if err := checkesxiovf(dtmodel.Name, dtmodel.Spec.Os, dtmodel.Spec.Cpu,
+				dtmodel.Spec.Memory, dtmodel.Spec.Disk, dtmodelContent); err != nil {
 				dtmodel.Status.Phase = "NotReady"
 			} else {
 				dtmodel.Status.Phase = "Ready"
@@ -94,11 +95,11 @@ func (r *DtModelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 }
 
 // check ovf model if provider is set to esxi
-func checkesxiovf(name string, content map[string]string) error {
+func checkesxiovf(name string, os string, cpu int32, memory int64, disk int64, content map[string]string) error {
 	var library = content["library"]
 	var ds = content["ds"]
-	var ovf = content["ovf"]
-
+	var ovf = content["ovf"] //ovf模版名称
+	// cpu 内存 磁盘 校验 todo
 	if library == "" || ds == "" || ovf == "" {
 		return &util.Err{Msg: "library or os or ds or ovf is not set"}
 	}

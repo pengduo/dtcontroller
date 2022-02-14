@@ -9,3 +9,4 @@ spec:
     ovf: "centos7"
     ds: "bigdata"
     library: "library1"
+    os: "centos7"
