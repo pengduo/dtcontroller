@@ -1,15 +1,13 @@
 apiVersion: apps.dtwave.com/v1
 kind: DtCluster
 metadata:
-  name: dtcluster-esxi
+  name: dtcluster-pve
 spec:
   labels:
     a: b
-  provider: "esxi"
-  desc: "esxi测试"
+  provider: "pve"
+  desc: "pve测试"
   content:
     ip: "192.168.123.138"
-    username: "linjb@vsphere.local"
+    user: "linjb@vsphere.local"
     password: "LIN115jinbao!"
-    datacenter: "sss"
-    datastore: "bigdata"

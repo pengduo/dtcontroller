@@ -18,9 +18,10 @@ import (
 )
 
 const (
-	Ready    = "ready"
-	NotReady = "notready"
-	UnKnown  = "unknown"
+	Ready     = "ready"
+	NotReady  = "notready"
+	UnKnown   = "unknown"
+	Connected = "connected"
 )
 
 // DtNodeReconciler reconciles a DtNode object
@@ -44,20 +45,31 @@ func (r *DtNodeReconciler) Reconcile(ctx context.Context,
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	var dtClusterNameMap = dtnode.Spec.DtCluster
+	var dtClusterMap = dtnode.Spec.DtCluster
 	var dtcluster = &appsv1.DtCluster{}
 
 	// 检查dtnode绑定的dtcluster有效性
-	for key, value := range dtClusterNameMap {
+	for key, value := range dtClusterMap {
 		fmt.Println(key, value)
 		if err := r.Get(ctx, client.ObjectKey{Name: key}, dtcluster); err != nil {
-			logrus.Info("找不到dtcluster", key)
-			dtClusterNameMap[key] = UnKnown
+			logrus.Info("找不到dtcluster ", key)
+			dtClusterMap[key] = UnKnown
 		} else if err = checkConnect(dtcluster.Spec.Provider, dtcluster.Spec.Content); err != nil {
-			dtClusterNameMap[key] = NotReady
+			logrus.Error(err)
+			dtClusterMap[key] = NotReady
+		} else {
+			dtClusterMap[key] = Connected
+			dtnode.Status.Phase = Ready
 		}
+		// update dtcluster
+		dtcluster.Status.Bound = true
+		r.Status().Update(ctx, dtcluster)
 	}
+	// update dtnode spec
+	dtnode.Spec.DtCluster = dtClusterMap
 	r.Update(ctx, dtnode)
+	// update dtnode status
+	r.Status().Update(ctx, dtnode)
 
 	return ctrl.Result{}, nil
 }
@@ -65,10 +77,14 @@ func (r *DtNodeReconciler) Reconcile(ctx context.Context,
 // checkContent is used to check if the dtcluster right
 func checkConnect(provider string, content map[string]string) error {
 
+	logrus.Info("检查连通性, provider = ", provider)
 	if provider == "esxi" {
 		var ip = content["ip"]
 		var username = content["username"]
 		var password = content["password"]
+		logrus.Info("username = ", username)
+		logrus.Info("password = ", password)
+		logrus.Info("ip = ", ip)
 		if ip == "" || username == "" || password == "" {
 			return &util.Err{Msg: "check is there an error in ip username or password"}
 		}
@@ -85,6 +101,7 @@ func checkConnectESXI(ip string, username string, password string) error {
 		fmt.Println("error when building vm client")
 		return err
 	}
+	logrus.Info("connect to esxi success", ip)
 	return nil
 }
 

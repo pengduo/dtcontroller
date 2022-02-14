@@ -50,10 +50,6 @@ func (r *DtClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		logrus.Info("找不到dtCluster")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-
-	dtCluster.Status.Bound = true
-	r.Status().Update(ctx, dtCluster)
-
 	return ctrl.Result{}, nil
 }
 

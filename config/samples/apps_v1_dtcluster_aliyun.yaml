@@ -1,0 +1,12 @@
+apiVersion: apps.dtwave.com/v1
+kind: DtCluster
+metadata:
+  name: dtcluster-aliyun
+spec:
+  labels:
+    a: b
+  provider: "aliyun"
+  desc: "aliyun测试"
+  content:
+    ak: "asdadadadawewe"
+    sk: "sdadadsadsd"
