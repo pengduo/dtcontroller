@@ -1,0 +1,11 @@
+apiVersion: apps.dtwave.com/v1
+kind: DtModel
+metadata:
+  name: dtmodel-sample
+spec:
+  provider: esxi
+  type: ovf
+  content:
+    ovf: "centos7"
+    ds: "bigdata"
+    library: "library1"

@@ -44,21 +44,21 @@ func (r *DtMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	var machine = &appsv1.DtMachine{}
 	if err := r.Get(ctx, req.NamespacedName, machine); err != nil {
-		logrus.Info("找不到DtMachine")
+		logrus.Info("cannot find dtmachine")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	var dtClusterName = machine.Spec.DtCluster
 	var dtCluster = &appsv1.DtCluster{}
-	if err := r.Get(ctx, client.ObjectKey{Name: dtClusterName}, dtCluster); err != nil {
+	if err := r.Get(ctx, client.ObjectKey{Name: dtClusterName, Namespace: machine.Namespace}, dtCluster); err != nil {
 		logrus.Info("cannot find dtCluster ", err)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	var modelName = machine.Spec.DtModel
 	var model = &appsv1.DtModel{}
-	if err := r.Get(ctx, client.ObjectKey{Name: modelName}, model); err != nil {
-		logrus.Info("cannot find model", modelName, err)
+	if err := r.Get(ctx, client.ObjectKey{Name: modelName, Namespace: machine.Namespace}, model); err != nil {
+		logrus.Info("cannot find dtmodel ", modelName, err)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
@@ -90,7 +90,10 @@ func (r *DtMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	if err != nil {
 		logrus.Info("部署出错了")
 		machine.Status.Phase = "Failed"
+	} else {
+		machine.Status.Phase = "Ready"
 	}
+
 	r.Status().Update(ctx, machine)
 	return ctrl.Result{}, nil
 }
@@ -98,6 +101,7 @@ func (r *DtMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 // assignMachine is desined to deploy a machine with target dtcluster configuration
 func assignMachine(ctx context.Context, machine *appsv1.DtMachine, model *appsv1.DtModel, dtcluster *appsv1.DtCluster) error {
 	var content = dtcluster.Spec.Content
+	// if provider is set to esxi, do this
 	if dtcluster.Spec.Provider == string(ESXI) {
 		var ip = content["ip"]
 		var username = content["username"]
@@ -203,6 +207,9 @@ func assignMachineESXI(ctx context.Context, machine *appsv1.DtMachine, model *ap
 		machine.Status.HostName = ""
 		return nil
 	}
+	if model.Status.Phase != "Ready" {
+		return &util.Err{Msg: "dtmodel is not ready"}
+	}
 	// 2. 判断部署类型
 	switch model.Spec.Type {
 	case "bare":
@@ -250,17 +257,15 @@ func assignMachineESXIOVF(machine *appsv1.DtMachine, dtmodel *appsv1.DtModel, c 
 	}
 
 	var content = dtmodel.Spec.Content
-
-	var ovf = content["ovf"]
 	var library = content["library"]
-	var os = content["os"]
+	var ovf = content["ovf"]
 	var ds = content["ds"]
 
-	if ovf == "" || library == "" || os == "" || ds == "" {
+	if ovf == "" || library == "" || ds == "" {
 		return &util.Err{Msg: "ovf or library or os or ds is not set"}
 	}
 	//获取内容库
-	item, err := esxi.GetLibraryItem(context.Background(), rc, library, ovf, os)
+	item, err := esxi.GetLibraryItem(context.Background(), rc, library, "ovf", ovf)
 	if err != nil {
 		logrus.Info("内容库获取出错", err)
 		return err

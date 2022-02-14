@@ -1,13 +1,12 @@
 apiVersion: apps.dtwave.com/v1
-kind: Machine
+kind: DtMachine
 metadata:
   name: machine-sample-ovf
 spec:
-  type: ovf
-  user: deploy
-  dtnode: "dtnode-sample"
-  password: deploy@1298
-  cpu: 2
-  memory: 256
-  disk: "100"
-
+  desc: "测试ovf部署机器"
+  dept: "研发中心"
+  mantainer: "linjinbao66"
+  releasestragle: "never"
+  releasedate: "~"
+  dtcluster: "dtcluster-esxi"
+  dtmodel: "dtmodel-sample"

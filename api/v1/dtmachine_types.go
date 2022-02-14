@@ -41,7 +41,7 @@ type DtMachineStatus struct {
 //+kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
 //+kubebuilder:printcolumn:name="Ip",type=string,JSONPath=`.status.ip`
 //+kubebuilder:printcolumn:name="DtNode",type=string,JSONPath=`.spec.dtnode`
-//+kubebuilder:printcolumn:name="type",type=string,JSONPath=`.spec.type`
+//+kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.spec.type`
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 

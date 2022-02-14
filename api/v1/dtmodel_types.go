@@ -12,17 +12,19 @@ type DtModelSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Labels  map[string]string `json:"labels,omitempty"`
-	Desc    string            `json:"desc,omitempty"`
-	Type    string            `json:"type,omitempty"`
-	Content map[string]string `json:"content,omitempty"` //内容
+	Labels   map[string]string `json:"labels,omitempty"`
+	Desc     string            `json:"desc,omitempty"`
+	Provider string            `json:"provider,omitempty"`
+	Type     string            `json:"type,omitempty"`    //类型
+	Content  map[string]string `json:"content,omitempty"` //内容
 }
 
 // DtModelStatus defines the observed state of DtModel
 type DtModelStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Bound bool `json:"bound,omitempty"`
+	Phase string `json:"phase,omitempty"`
+	Bound bool   `json:"bound,omitempty"`
 }
 
 //+kubebuilder:object:root=true

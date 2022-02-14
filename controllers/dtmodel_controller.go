@@ -19,12 +19,20 @@ package controllers
 import (
 	"context"
 
+	logrus "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	appsv1 "dtcontroller/api/v1"
+	"dtcontroller/util"
+)
+
+const (
+	BARE  = "bare"
+	CLONE = "clone"
+	OVF   = "ovf"
 )
 
 // DtModelReconciler reconciles a DtModel object
@@ -49,9 +57,53 @@ type DtModelReconciler struct {
 func (r *DtModelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	var dtmodel = &appsv1.DtModel{}
+
+	if err := r.Get(ctx, req.NamespacedName, dtmodel); err != nil {
+		logrus.Info("cannot find dtmodel")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	var dtmodelType = dtmodel.Spec.Type
+	var dtmodelProvider = dtmodel.Spec.Provider
+	var dtmodelContent = dtmodel.Spec.Content
+	// 处理esxi的虚拟化方案
+	if dtmodelProvider == "esxi" {
+		switch dtmodelType {
+		case OVF:
+			if err := checkesxiovf(dtmodel.Name, dtmodelContent); err != nil {
+				dtmodel.Status.Phase = "NotReady"
+			} else {
+				dtmodel.Status.Phase = "Ready"
+			}
+		case BARE:
+			//todo
+			break
+		case CLONE:
+			//todo
+			break
+		default:
+			break
+		}
+	}
+	//更新状态
+	r.Status().Update(ctx, dtmodel)
+	r.Update(ctx, dtmodel)
 
 	return ctrl.Result{}, nil
+}
+
+// check ovf model if provider is set to esxi
+func checkesxiovf(name string, content map[string]string) error {
+	var library = content["library"]
+	var ds = content["ds"]
+	var ovf = content["ovf"]
+
+	if library == "" || ds == "" || ovf == "" {
+		return &util.Err{Msg: "library or os or ds or ovf is not set"}
+	}
+
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

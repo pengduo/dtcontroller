@@ -27,7 +27,7 @@ spec:
       name: DtNode
       type: string
     - jsonPath: .spec.type
-      name: type
+      name: Type
       type: string
     name: v1
     schema:
