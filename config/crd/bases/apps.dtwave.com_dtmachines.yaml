@@ -32,7 +32,7 @@ spec:
     name: v1
     schema:
       openAPIV3Schema:
-        description: Machine is the Schema for the machines API
+        description: DtMachine is the Schema for the dtmachines API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -69,7 +69,7 @@ spec:
                 type: string
             type: object
           status:
-            description: 状态信息 MachineStatus defines the observed state of Machine
+            description: 状态信息 MachineStatus defines the observed state of DtMachine
             properties:
               cpuused:
                 type: string

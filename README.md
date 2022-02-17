@@ -76,5 +76,3 @@ DtNode是Node的扩展，其丰富了Node属性，与Node实行一一绑定。
 ## 注意事项
 
 * 程序仅在kubernetes 1.20版本测试通过
-
-
