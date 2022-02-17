@@ -25,7 +25,7 @@ type DtMachineSpec struct {
 }
 
 // 状态信息
-// MachineStatus defines the observed state of Machine
+// MachineStatus defines the observed state of DtMachine
 type DtMachineStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
@@ -45,7 +45,7 @@ type DtMachineStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// Machine is the Schema for the machines API
+// DtMachine is the Schema for the dtmachines API
 type DtMachine struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -56,7 +56,7 @@ type DtMachine struct {
 
 //+kubebuilder:object:root=true
 
-// MachineList contains a list of Machine
+// MachineList contains a list of DtMachine
 type DtMachineList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

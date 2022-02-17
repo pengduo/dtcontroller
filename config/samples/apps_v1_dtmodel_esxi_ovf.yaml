@@ -3,10 +3,14 @@ kind: DtModel
 metadata:
   name: dtmodel-sample
 spec:
+  desc: centos模版
   provider: esxi
   type: ovf
+  os: centos7
+  cpu: 2
+  memory: 1024
+  disk: 10240
   content:
     ovf: "centos7"
     ds: "bigdata"
     library: "library1"
-    os: "centos7"
