@@ -17,7 +17,7 @@ resource-operator 是一个资源管控工具，提供了针对虚拟化和容�
 ### 下载源码
 
 ```shell
-git clone ssh://git@gitlab.dtwave-inc.com:30001/meraks/resource-operator.git
+git clone https://github.com/linjinbao666/dtcontroller.git
 ```
 
 ## 部署主程序
