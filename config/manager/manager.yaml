@@ -27,12 +27,11 @@ spec:
       - command:
         - /manager
         args:
-        - --leader-elect
         env:
         - name: MY_NODE_NAME
           valueFrom:
             fieldRef:
-              fieldPath: .spec.nodename
+              fieldPath: spec.nodeName
         - name: MY_POD_NAME
           valueFrom:
             fieldRef:
