@@ -74,6 +74,15 @@ func (r *DtNodeReconciler) Reconcile(ctx context.Context,
 	var envNode = os.Getenv("MY_NODE_NAME")
 	var podName = os.Getenv("MY_POD_NAME")
 
+	if specNode == "" {
+		logrus.Info("please set node in spec")
+		dtnode.Status.Phase = NotReady
+		dtnode.Status.Node = ""
+		r.Status().Update(ctx, dtnode)
+
+		return ctrl.Result{}, nil
+	}
+
 	if specNode != envNode {
 		logrus.Info("pod cannot handle this dtnode, pod is : ",
 			podName, ",target node is : ", specNode)

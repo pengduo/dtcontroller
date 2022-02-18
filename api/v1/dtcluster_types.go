@@ -28,6 +28,7 @@ type DtClusterStatus struct {
 
 //+kubebuilder:printcolumn:name="Provider",type=string,JSONPath=`.spec.provider`
 //+kubebuilder:printcolumn:name="Desc",type=string,JSONPath=`.spec.desc`
+//+kubebuilder:printcolumn:name="Bound",type=string,JSONPath=`.status.bound`
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //+kubebuilder:resource:scope=Cluster

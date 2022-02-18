@@ -23,6 +23,9 @@ spec:
     - jsonPath: .spec.desc
       name: Desc
       type: string
+    - jsonPath: .status.bound
+      name: Bound
+      type: string
     name: v1
     schema:
       openAPIV3Schema:

@@ -3,6 +3,7 @@ kind: DtNode
 metadata:
   name: dtnode-dtwave
 spec:
+  node: master
   dtcluster:
     dtcluster-esxi: unknown
     dtcluster-pve: unknown
