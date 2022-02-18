@@ -34,6 +34,8 @@ type DtNodeSpec struct {
 	Provider  string            `json:"provider,omitempty"`
 	DtCluster map[string]string `json:"dtcluster,omitempty"`
 	Desc      string            `json:"desc,omitempty"`
+
+	Node string `json:"node,omitempty"`
 }
 
 // 状态信息
@@ -47,6 +49,7 @@ type DtNodeStatus struct {
 
 //+kubebuilder:printcolumn:name="Provider",type=string,JSONPath=`.spec.provider`
 //+kubebuilder:printcolumn:name="Node",type=string,JSONPath=`.status.node`
+//+kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //+kubebuilder:resource:scope=Cluster

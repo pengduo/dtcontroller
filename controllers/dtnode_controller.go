@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	logrus "github.com/sirupsen/logrus"
@@ -59,7 +60,6 @@ func (r *DtNodeReconciler) Reconcile(ctx context.Context,
 			dtClusterMap[key] = NotReady
 		} else {
 			dtClusterMap[key] = Connected
-			dtnode.Status.Phase = Ready
 		}
 		// update dtcluster
 		dtcluster.Status.Bound = true
@@ -68,7 +68,20 @@ func (r *DtNodeReconciler) Reconcile(ctx context.Context,
 	// update dtnode spec
 	dtnode.Spec.DtCluster = dtClusterMap
 	r.Update(ctx, dtnode)
+
 	// update dtnode status
+	var specNode = dtnode.Spec.Node
+	var envNode = os.Getenv("MY_NODE_NAME")
+	var podName = os.Getenv("MY_POD_NAME")
+
+	if specNode != envNode {
+		logrus.Info("pod cannot handle this dtnode, pod is : ",
+			podName, ",target node is : ", specNode)
+		return ctrl.Result{}, nil
+	}
+	logrus.Info("ok, pod is now on due", podName)
+	dtnode.Status.Phase = Ready
+	dtnode.Status.Node = envNode
 	r.Status().Update(ctx, dtnode)
 
 	return ctrl.Result{}, nil
