@@ -49,9 +49,23 @@ func (r *DtNodeReconciler) Reconcile(ctx context.Context,
 	var specNode = dtnode.Spec.Node
 	var envNode = os.Getenv("MY_NODE_NAME")
 	var podName = os.Getenv("MY_POD_NAME")
+
+	// update dtnode status
+	if specNode == "" {
+		logrus.Info("please set node in spec")
+		dtnode.Status.Phase = NotReady
+		dtnode.Status.Node = ""
+		r.Status().Update(ctx, dtnode)
+		return ctrl.Result{}, nil
+	}
+	if specNode != envNode {
+		logrus.Info("pod cannot handle this dtnode, pod is : ",
+			podName, ",target node is : ", specNode)
+		return ctrl.Result{}, nil
+	}
+	logrus.Info("ok, pod is now on due", podName)
 	var dtClusterMap = dtnode.Spec.DtCluster
 	var dtcluster = &appsv1.DtCluster{}
-
 	// 检查dtnode绑定的dtcluster有效性
 	for key, value := range dtClusterMap {
 		fmt.Println(key, value)
@@ -74,27 +88,9 @@ func (r *DtNodeReconciler) Reconcile(ctx context.Context,
 	// update dtnode spec
 	dtnode.Spec.DtCluster = dtClusterMap
 	r.Update(ctx, dtnode)
-
-	// update dtnode status
-	if specNode == "" {
-		logrus.Info("please set node in spec")
-		dtnode.Status.Phase = NotReady
-		dtnode.Status.Node = ""
-		r.Status().Update(ctx, dtnode)
-
-		return ctrl.Result{}, nil
-	}
-
-	if specNode != envNode {
-		logrus.Info("pod cannot handle this dtnode, pod is : ",
-			podName, ",target node is : ", specNode)
-		return ctrl.Result{}, nil
-	}
-	logrus.Info("ok, pod is now on due", podName)
 	dtnode.Status.Phase = Ready
 	dtnode.Status.Node = envNode
 	r.Status().Update(ctx, dtnode)
-
 	return ctrl.Result{}, nil
 }
 
