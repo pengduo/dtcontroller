@@ -1,0 +1,12 @@
+apiVersion: apps.dtwave.com/v1
+kind: DtNode
+metadata:
+  name: dtnode-dtwave-node1
+spec:
+  node: node1
+  dtcluster:
+    dtcluster-esxi: unknown
+    dtcluster-pve: unknown
+    dtcluster-aliyun: unknown
+  provider: dtwave
+  desc: "测试dtnode"

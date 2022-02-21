@@ -1,9 +1,9 @@
 apiVersion: apps.dtwave.com/v1
 kind: DtNode
 metadata:
-  name: dtnode-dtwave
+  name: dtnode-dtwave-node2
 spec:
-  node: master
+  node: node2
   dtcluster:
     dtcluster-esxi: unknown
     dtcluster-pve: unknown
