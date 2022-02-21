@@ -23,12 +23,14 @@ type DtClusterSpec struct {
 type DtClusterStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Bound bool `json:"bound,omitempty"`
+	Bound  bool   `json:"bound,omitempty"`
+	DtNode string `json:"dtnode,omitempty"`
 }
 
 //+kubebuilder:printcolumn:name="Provider",type=string,JSONPath=`.spec.provider`
 //+kubebuilder:printcolumn:name="Desc",type=string,JSONPath=`.spec.desc`
 //+kubebuilder:printcolumn:name="Bound",type=string,JSONPath=`.status.bound`
+//+kubebuilder:printcolumn:name="DtNode",type=string,JSONPath=`.status.dtnode`
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //+kubebuilder:resource:scope=Cluster

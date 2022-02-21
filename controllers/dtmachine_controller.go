@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 
@@ -55,12 +56,31 @@ func (r *DtMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	var dtnode = &appsv1.DtNode{}
+	if err := r.Get(ctx, client.ObjectKey{Name: dtCluster.Status.DtNode}, dtnode); err != nil {
+		logrus.Info("cannot find dtnode ", err)
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	var specNode = dtnode.Spec.Node
+	var envNode = os.Getenv("MY_NODE_NAME")
+	var podName = os.Getenv("MY_POD_NAME")
+
+	//判断是否该任务归自己处理
+	if specNode != envNode {
+		logrus.Info("pod cannot handle this dtnode, pod is : ",
+			podName, ",target node is : ", specNode)
+		return ctrl.Result{}, nil
+	}
+
 	var modelName = machine.Spec.DtModel
 	var model = &appsv1.DtModel{}
 	if err := r.Get(ctx, client.ObjectKey{Name: modelName, Namespace: machine.Namespace}, model); err != nil {
 		logrus.Info("cannot find dtmodel ", modelName, err)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
+	//更新dtmodel的状态
+	r.Status().Update(ctx, model)
 
 	// 预删除逻辑
 	if machine.ObjectMeta.DeletionTimestamp.IsZero() {
@@ -76,13 +96,11 @@ func (r *DtMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			if err := r.machineFinalizer(ctx, machine.Name, dtCluster); err != nil {
 				return ctrl.Result{}, err
 			}
-
 			controllerutil.RemoveFinalizer(machine, dtMachineFinalizer)
 			if err := r.Update(ctx, machine); err != nil {
 				return ctrl.Result{}, err
 			}
 		}
-
 		return ctrl.Result{}, nil
 	}
 

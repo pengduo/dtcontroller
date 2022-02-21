@@ -46,6 +46,9 @@ func (r *DtNodeReconciler) Reconcile(ctx context.Context,
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	var specNode = dtnode.Spec.Node
+	var envNode = os.Getenv("MY_NODE_NAME")
+	var podName = os.Getenv("MY_POD_NAME")
 	var dtClusterMap = dtnode.Spec.DtCluster
 	var dtcluster = &appsv1.DtCluster{}
 
@@ -58,22 +61,21 @@ func (r *DtNodeReconciler) Reconcile(ctx context.Context,
 		} else if err = checkConnect(dtcluster.Spec.Provider, dtcluster.Spec.Content); err != nil {
 			logrus.Error(err)
 			dtClusterMap[key] = NotReady
+		} else if dtcluster.Status.Bound || dtcluster.Status.DtNode != "" {
+			logrus.Info("dtcluster has been bound,", dtcluster.Name)
 		} else {
 			dtClusterMap[key] = Connected
+			// update dtcluster
+			dtcluster.Status.Bound = true
+			dtcluster.Status.DtNode = envNode
+			r.Status().Update(ctx, dtcluster)
 		}
-		// update dtcluster
-		dtcluster.Status.Bound = true
-		r.Status().Update(ctx, dtcluster)
 	}
 	// update dtnode spec
 	dtnode.Spec.DtCluster = dtClusterMap
 	r.Update(ctx, dtnode)
 
 	// update dtnode status
-	var specNode = dtnode.Spec.Node
-	var envNode = os.Getenv("MY_NODE_NAME")
-	var podName = os.Getenv("MY_POD_NAME")
-
 	if specNode == "" {
 		logrus.Info("please set node in spec")
 		dtnode.Status.Phase = NotReady

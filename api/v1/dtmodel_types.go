@@ -32,6 +32,14 @@ type DtModelStatus struct {
 	Bound bool   `json:"bound,omitempty"`
 }
 
+//+kubebuilder:printcolumn:name="Provider",type=string,JSONPath=`.spec.provider`
+//+kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.spec.type`
+//+kubebuilder:printcolumn:name="Os",type=string,JSONPath=`.spec.os`
+//+kubebuilder:printcolumn:name="Cpu",type=string,JSONPath=`.spec.cpu`
+//+kubebuilder:printcolumn:name="Memory",type=string,JSONPath=`.spec.memory`
+//+kubebuilder:printcolumn:name="Disk",type=string,JSONPath=`.spec.disk`
+//+kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
+//+kubebuilder:printcolumn:name="Bound",type=string,JSONPath=`.status.bound`
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
