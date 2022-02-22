@@ -79,8 +79,6 @@ func (r *DtMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		logrus.Info("cannot find dtmodel ", modelName, err)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-	//更新dtmodel的状态
-	r.Status().Update(ctx, model)
 
 	// 预删除逻辑
 	if machine.ObjectMeta.DeletionTimestamp.IsZero() {
@@ -109,8 +107,13 @@ func (r *DtMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		logrus.Info("部署出错了")
 		machine.Status.Phase = "Failed"
 	} else {
+		model.Status.Bound = true
 		machine.Status.Phase = "Ready"
+		machine.Status.DtNode = dtCluster.Status.DtNode
 	}
+	machine.Status.Os = model.Spec.Os
+	//更新dtmodel的状态
+	r.Status().Update(ctx, model)
 
 	r.Status().Update(ctx, machine)
 	return ctrl.Result{}, nil

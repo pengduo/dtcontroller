@@ -36,12 +36,17 @@ type DtMachineStatus struct {
 	CpuUsed    string `json:"cpuused,omitempty"`
 	MemoryUsed string `json:"memoryused,omitempty"`
 	DiskUsed   string `json:"diskused,omitempty"`
+
+	DtNode string `json:"dtnode,omitempty"`
+	Os     string `json:"os,omitempty"`
 }
 
+//+kubebuilder:printcolumn:name="DtCluster",type=string,JSONPath=`.spec.dtcluster`
+//+kubebuilder:printcolumn:name="DtNode",type=string,JSONPath=`.status.dtnode`
+//+kubebuilder:printcolumn:name="DtModel",type=string,JSONPath=`.spec.dtmodel`
 //+kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
 //+kubebuilder:printcolumn:name="Ip",type=string,JSONPath=`.status.ip`
-//+kubebuilder:printcolumn:name="DtNode",type=string,JSONPath=`.spec.dtnode`
-//+kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.spec.type`
+//+kubebuilder:printcolumn:name="Os",type=string,JSONPath=`.status.os`
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 

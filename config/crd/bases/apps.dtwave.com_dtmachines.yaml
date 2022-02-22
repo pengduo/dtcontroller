@@ -17,17 +17,23 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
+    - jsonPath: .spec.dtcluster
+      name: DtCluster
+      type: string
+    - jsonPath: .status.dtnode
+      name: DtNode
+      type: string
+    - jsonPath: .spec.dtmodel
+      name: DtModel
+      type: string
     - jsonPath: .status.phase
       name: Phase
       type: string
     - jsonPath: .status.ip
       name: Ip
       type: string
-    - jsonPath: .spec.dtnode
-      name: DtNode
-      type: string
-    - jsonPath: .spec.type
-      name: Type
+    - jsonPath: .status.os
+      name: Os
       type: string
     name: v1
     schema:
@@ -75,6 +81,8 @@ spec:
                 type: string
               diskused:
                 type: string
+              dtnode:
+                type: string
               hostname:
                 type: string
               ip:
@@ -82,6 +90,8 @@ spec:
               mac:
                 type: string
               memoryused:
+                type: string
+              os:
                 type: string
               phase:
                 description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
