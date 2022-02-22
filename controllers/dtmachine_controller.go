@@ -51,7 +51,7 @@ func (r *DtMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	var dtClusterName = machine.Spec.DtCluster
 	var dtCluster = &appsv1.DtCluster{}
-	if err := r.Get(ctx, client.ObjectKey{Name: dtClusterName, Namespace: machine.Namespace}, dtCluster); err != nil {
+	if err := r.Get(ctx, client.ObjectKey{Name: dtClusterName}, dtCluster); err != nil {
 		logrus.Info("cannot find dtCluster ", err)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
@@ -65,7 +65,7 @@ func (r *DtMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	var specNode = dtnode.Spec.Node
 	var envNode = os.Getenv("MY_NODE_NAME")
 	var podName = os.Getenv("MY_POD_NAME")
-
+	logrus.Info("dtnode_controller", specNode, envNode, podName)
 	//判断是否该任务归自己处理
 	if specNode != envNode {
 		logrus.Info("pod cannot handle this dtnode, pod is : ",

@@ -81,7 +81,7 @@ func (r *DtNodeReconciler) Reconcile(ctx context.Context,
 			dtClusterMap[key] = Connected
 			// update dtcluster
 			dtcluster.Status.Bound = true
-			dtcluster.Status.DtNode = envNode
+			dtcluster.Status.DtNode = dtnode.Name
 			r.Status().Update(ctx, dtcluster)
 		}
 	}
