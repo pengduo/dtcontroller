@@ -17,7 +17,7 @@ resource-operator 是一个资源管控工具，提供了针对虚拟化和容�
 ### 下载源码
 
 ```shell
-git clone https://github.com/linjinbao666/dtcontroller.git
+git clone http://gitlab.dtwave-inc.com/meraks/resource-operator.git
 ```
 
 ## 部署主程序
@@ -76,3 +76,8 @@ DtNode是Node的扩展，其丰富了Node属性，与Node实行一一绑定。
 ## 注意事项
 
 * 程序仅在kubernetes 1.20版本测试通过
+
+## 待实现
+
+1. 虚拟机加上标签，避免误删除
+2. 网络问题
