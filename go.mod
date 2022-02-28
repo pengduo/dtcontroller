@@ -3,6 +3,9 @@ module dtcontroller
 go 1.16
 
 require (
+	github.com/766b/go-outliner v0.0.0-20180511142203-fc6edecdadd7 // indirect
+	github.com/apache/dubbo-go v1.5.7
+	github.com/apache/dubbo-go-hessian2 v1.11.0
 	github.com/onsi/ginkgo v1.16.1
 	github.com/onsi/gomega v1.11.0
 	github.com/sirupsen/logrus v1.8.1
