@@ -104,9 +104,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// hessian.RegisterPOJO(&dubbo.User{})
-	// config.Load()
-
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")

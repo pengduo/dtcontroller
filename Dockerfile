@@ -13,7 +13,6 @@ RUN go mod download
 
 # Copy the go source
 COPY main.go main.go
-# COPY dubbo/ dubbo/
 COPY api/ api/
 COPY controllers/ controllers/
 COPY util/ util/
@@ -23,15 +22,8 @@ COPY vmsdk/ vmsdk/
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o manager main.go
 
 FROM alpine:latest
-# Set env 
-# ENV APP_LOG_CONF_FILE /log.yml
-# ENV CONF_PROVIDER_FILE_PATH  /server.yml
-# ENV CONF_CONSUMER_FILE_PATH /client.yml
 WORKDIR /
 COPY --from=builder /workspace/manager .
-# COPY dubbo/log.yml .
-# COPY dubbo/server.yml .
-# COPY dubbo/client.yml .
 USER 65532:65532
 
 ENTRYPOINT ["/manager"]
